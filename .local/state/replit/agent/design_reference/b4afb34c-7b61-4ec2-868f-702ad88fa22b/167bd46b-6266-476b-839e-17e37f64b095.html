@@ -1,0 +1,968 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WayWise - Your Smart Travel Partner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'sans': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#2563EB',
+                        secondary: '#10B981',
+                        accent: '#F59E0B',
+                    }
+                }
+            }
+        };
+    </script>
+    <style>
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        .map-animation {
+            background-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 600"><defs><pattern id="grid" width="50" height="50" patternUnits="userSpaceOnUse"><path d="M 50 0 L 0 0 0 50" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="1"/></pattern></defs><rect width="100%" height="100%" fill="url(%23grid)"/></svg>');
+            animation: float 6s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="font-sans bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <i class="fas fa-compass text-primary text-2xl"></i>
+                    <span class="text-2xl font-bold text-gray-800">WayWise</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#" class="text-gray-600 hover:text-primary transition-colors">Destinations</a>
+                    <a href="#" class="text-gray-600 hover:text-primary transition-colors">Hotels</a>
+                    <a href="#" class="text-gray-600 hover:text-primary transition-colors">Experiences</a>
+                    <a href="#" class="text-gray-600 hover:text-primary transition-colors">Support</a>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button class="text-gray-600 hover:text-primary transition-colors">Sign In</button>
+                    <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="relative gradient-bg text-white py-20 overflow-hidden">
+        <div class="absolute inset-0 map-animation opacity-20"></div>
+        <div class="container mx-auto px-4 relative z-10">
+            <div class="text-center mb-12">
+                <h1 class="text-5xl md:text-6xl font-bold mb-4">WayWise</h1>
+                <p class="text-xl md:text-2xl mb-2">Your Smart Travel Partner</p>
+                <p class="text-lg opacity-90">Plan. Book. Explore. Smarter.</p>
+            </div>
+            
+            <!-- Trip Planning Form -->
+            <div class="max-w-4xl mx-auto bg-white rounded-xl shadow-2xl p-8 text-gray-800">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                    <div class="lg:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">From</label>
+                        <div class="relative">
+                            <i class="fas fa-map-marker-alt absolute left-3 top-3 text-gray-400"></i>
+                            <input type="text" placeholder="Kollam" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                    </div>
+                    <div class="lg:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">To</label>
+                        <div class="relative">
+                            <i class="fas fa-map-marker-alt absolute left-3 top-3 text-gray-400"></i>
+                            <input type="text" placeholder="Goa" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                    </div>
+                    <div class="lg:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Travel Date</label>
+                        <div class="relative">
+                            <i class="fas fa-calendar absolute left-3 top-3 text-gray-400"></i>
+                            <input type="date" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                    </div>
+                    <div class="lg:col-span-1">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Return Date</label>
+                        <div class="relative">
+                            <i class="fas fa-calendar absolute left-3 top-3 text-gray-400"></i>
+                            <input type="date" class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent">
+                        </div>
+                    </div>
+                    <div class="lg:col-span-1 flex items-end">
+                        <button class="w-full bg-primary text-white py-2 px-6 rounded-lg hover:bg-blue-700 transition-colors font-medium">
+                            <i class="fas fa-search mr-2"></i>Plan My Trip
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Trip Summary Section -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <h2 class="text-3xl font-bold text-center mb-12">AI-Powered Trip Summary</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="space-y-6">
+                    <div class="bg-gray-50 p-6 rounded-xl">
+                        <h3 class="text-xl font-semibold mb-4 flex items-center">
+                            <i class="fas fa-route text-primary mr-2"></i>Best Route
+                        </h3>
+                        <!-- A detailed map view showing the optimal travel route from Kollam to Goa -->
+                        <div class="bg-blue-100 h-64 rounded-lg flex items-center justify-center">
+                            <div class="text-center">
+                                <i class="fas fa-map-marked-alt text-4xl text-primary mb-2"></i>
+                                <p class="text-gray-600">Interactive Route Map</p>
+                                <p class="text-sm text-gray-500">Kollam → Goa (595 km)</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-secondary/10 p-4 rounded-lg text-center">
+                            <i class="fas fa-clock text-secondary text-2xl mb-2"></i>
+                            <p class="font-semibold">Total Time</p>
+                            <p class="text-sm text-gray-600">12h 30m</p>
+                        </div>
+                        <div class="bg-accent/10 p-4 rounded-lg text-center">
+                            <i class="fas fa-rupee-sign text-accent text-2xl mb-2"></i>
+                            <p class="font-semibold">Estimated Cost</p>
+                            <p class="text-sm text-gray-600">₹8,500</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="space-y-4">
+                    <h3 class="text-xl font-semibold mb-4">Transport Options</h3>
+                    <div class="space-y-3">
+                        <div class="border border-gray-200 rounded-lg p-4 card-hover cursor-pointer">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <i class="fas fa-plane text-primary mr-3"></i>
+                                    <div>
+                                        <p class="font-medium">Flight</p>
+                                        <p class="text-sm text-gray-500">1h 30m • Fastest</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-semibold">₹4,500</p>
+                                    <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Recommended</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="border border-gray-200 rounded-lg p-4 card-hover cursor-pointer">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <i class="fas fa-train text-primary mr-3"></i>
+                                    <div>
+                                        <p class="font-medium">Train</p>
+                                        <p class="text-sm text-gray-500">14h 45m • Scenic</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-semibold">₹1,200</p>
+                                    <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Cheapest</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="border border-gray-200 rounded-lg p-4 card-hover cursor-pointer">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <i class="fas fa-bus text-primary mr-3"></i>
+                                    <div>
+                                        <p class="font-medium">Bus</p>
+                                        <p class="text-sm text-gray-500">12h 30m • Comfortable</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-semibold">₹800</p>
+                                    <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">Budget</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="border border-gray-200 rounded-lg p-4 card-hover cursor-pointer">
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center">
+                                    <i class="fas fa-car text-primary mr-3"></i>
+                                    <div>
+                                        <p class="font-medium">Car Rental</p>
+                                        <p class="text-sm text-gray-500">10h 15m • Flexible</p>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <p class="font-semibold">₹3,200</p>
+                                    <span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">Premium</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Accommodation Finder -->
+    <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-4">Find Perfect Accommodation</h2>
+                <p class="text-gray-600">AI-curated hotels based on your preferences</p>
+            </div>
+            
+            <!-- Filters -->
+            <div class="flex flex-wrap justify-center gap-4 mb-8">
+                <button class="bg-primary text-white px-4 py-2 rounded-full">All</button>
+                <button class="bg-white text-gray-700 px-4 py-2 rounded-full border hover:bg-gray-50">Budget</button>
+                <button class="bg-white text-gray-700 px-4 py-2 rounded-full border hover:bg-gray-50">Mid-range</button>
+                <button class="bg-white text-gray-700 px-4 py-2 rounded-full border hover:bg-gray-50">Luxury</button>
+                <button class="bg-white text-gray-700 px-4 py-2 rounded-full border hover:bg-gray-50">Near Beach</button>
+                <button class="bg-white text-gray-700 px-4 py-2 rounded-full border hover:bg-gray-50">City Center</button>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Hotel Card 1 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                    <!-- A luxurious beach resort room with ocean view in Goa -->
+                    <img src="https://images.unsplash.com/photo-1571896349842-33c89424de2d?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="Luxury beach resort room" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-lg font-semibold">Taj Exotica Resort & Spa</h3>
+                            <div class="flex items-center">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <span class="ml-1 text-sm font-medium">4.8</span>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-3">Benaulim Beach, South Goa</p>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-2xl font-bold text-primary">₹12,500</span>
+                                <span class="text-gray-500 text-sm">/night</span>
+                            </div>
+                            <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Book Now</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hotel Card 2 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                    <!-- A modern boutique hotel room with contemporary design in Goa -->
+                    <img src="https://images.unsplash.com/photo-1618773928121-c32242e63f39?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="Modern boutique hotel room" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-lg font-semibold">The Leela Goa</h3>
+                            <div class="flex items-center">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <span class="ml-1 text-sm font-medium">4.6</span>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-3">Cavelossim Beach, South Goa</p>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-2xl font-bold text-primary">₹8,200</span>
+                                <span class="text-gray-500 text-sm">/night</span>
+                            </div>
+                            <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Book Now</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hotel Card 3 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                    <!-- A cozy budget-friendly hotel room with clean modern amenities -->
+                    <img src="https://images.unsplash.com/photo-1611892440504-42a792e24d32?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="Budget-friendly hotel room" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-lg font-semibold">FabHotel Prime</h3>
+                            <div class="flex items-center">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <span class="ml-1 text-sm font-medium">4.2</span>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-3">Baga Beach, North Goa</p>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-2xl font-bold text-primary">₹3,500</span>
+                                <span class="text-gray-500 text-sm">/night</span>
+                            </div>
+                            <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Book Now</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hotel Card 4 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                    <!-- A traditional heritage hotel room with vintage charm and modern comforts -->
+                    <img src="https://images.unsplash.com/photo-1566073771259-6a8506099945?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="Heritage hotel room" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-lg font-semibold">Casa Colvale</h3>
+                            <div class="flex items-center">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <span class="ml-1 text-sm font-medium">4.5</span>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-3">Colvale, North Goa</p>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-2xl font-bold text-primary">₹6,800</span>
+                                <span class="text-gray-500 text-sm">/night</span>
+                            </div>
+                            <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Book Now</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hotel Card 5 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                    <!-- A stylish beachfront hotel room with panoramic ocean views -->
+                    <img src="https://images.unsplash.com/photo-1590490360182-c33d57733427?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="Beachfront hotel room" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-lg font-semibold">Grand Hyatt Goa</h3>
+                            <div class="flex items-center">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <span class="ml-1 text-sm font-medium">4.7</span>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-3">Bambolim Beach, North Goa</p>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-2xl font-bold text-primary">₹9,800</span>
+                                <span class="text-gray-500 text-sm">/night</span>
+                            </div>
+                            <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Book Now</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hotel Card 6 -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                    <!-- A comfortable mid-range hotel room with modern amenities and city access -->
+                    <img src="https://images.unsplash.com/photo-1564501049412-61c2a3083791?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="Mid-range hotel room" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex justify-between items-start mb-2">
+                            <h3 class="text-lg font-semibold">Novotel Goa Resort</h3>
+                            <div class="flex items-center">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <span class="ml-1 text-sm font-medium">4.4</span>
+                            </div>
+                        </div>
+                        <p class="text-gray-600 text-sm mb-3">Candolim Beach, North Goa</p>
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-2xl font-bold text-primary">₹7,200</span>
+                                <span class="text-gray-500 text-sm">/night</span>
+                            </div>
+                            <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">Book Now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Fuel & EV Support -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-4">Fuel & EV Support</h2>
+                <p class="text-gray-600">Smart route optimization with charging and fuel stations</p>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-gradient-to-br from-green-50 to-blue-50 p-6 rounded-xl">
+                    <h3 class="text-xl font-semibold mb-4 flex items-center">
+                        <i class="fas fa-charging-station text-secondary mr-2"></i>EV Charging Stations
+                    </h3>
+                    <!-- A modern EV charging station with electric vehicles being charged -->
+                    <div class="bg-white rounded-lg p-4 mb-4">
+                        <img src="https://pixabay.com/get/gccc88127fa8cb39525914ebfd3acd36d9ffea64e0273329fc27259f4e47ecc8706adb4181e1996c37b5f1f960a8e3470aa99dc12016f13fb52144c6295f2ec08_1280.jpg" alt="EV charging station" class="w-full h-32 object-cover rounded">
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center bg-white p-3 rounded-lg">
+                            <div>
+                                <p class="font-medium">BPCL EV Station</p>
+                                <p class="text-sm text-gray-600">Panaji, Goa • 2.5 km</p>
+                            </div>
+                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Available</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white p-3 rounded-lg">
+                            <div>
+                                <p class="font-medium">Tata Power Station</p>
+                                <p class="text-sm text-gray-600">Margao, Goa • 5.2 km</p>
+                            </div>
+                            <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">2 slots left</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="bg-gradient-to-br from-orange-50 to-red-50 p-6 rounded-xl">
+                    <h3 class="text-xl font-semibold mb-4 flex items-center">
+                        <i class="fas fa-gas-pump text-accent mr-2"></i>Fuel Stations
+                    </h3>
+                    <!-- A busy petrol station with multiple fuel pumps and vehicles -->
+                    <div class="bg-white rounded-lg p-4 mb-4">
+                        <img src="https://images.unsplash.com/photo-1545558014-8692077e9b5c?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=400" alt="Petrol station" class="w-full h-32 object-cover rounded">
+                    </div>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center bg-white p-3 rounded-lg">
+                            <div>
+                                <p class="font-medium">HP Petrol Pump</p>
+                                <p class="text-sm text-gray-600">NH66, Ponda • 1.8 km</p>
+                            </div>
+                            <span class="text-lg font-semibold text-green-600">₹102.5/L</span>
+                        </div>
+                        <div class="flex justify-between items-center bg-white p-3 rounded-lg">
+                            <div>
+                                <p class="font-medium">IOCL Station</p>
+                                <p class="text-sm text-gray-600">Mapusa, Goa • 3.4 km</p>
+                            </div>
+                            <span class="text-lg font-semibold text-green-600">₹101.8/L</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Tourist Recommendations -->
+    <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-4">Discover Amazing Places</h2>
+                <p class="text-gray-600">AI-recommended experiences tailored for you</p>
+            </div>
+            
+            <!-- Recommendations Carousel -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Restaurant Recommendation -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                    <!-- A beautiful outdoor restaurant terrace with ocean view and Goan cuisine -->
+                    <img src="https://images.unsplash.com/photo-1414235077428-338989a2e8c0?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="Ocean view restaurant terrace" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="bg-orange-100 text-orange-800 text-xs px-2 py-1 rounded-full">Restaurant</span>
+                            <div class="flex items-center">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <span class="ml-1 text-sm">4.7</span>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Fisherman's Wharf</h3>
+                        <p class="text-gray-600 text-sm mb-4">Authentic Goan seafood with stunning river views</p>
+                        <button class="bg-accent text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors w-full">Add to Itinerary</button>
+                    </div>
+                </div>
+
+                <!-- Cultural Hotspot -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                    <!-- Historic Basilica of Bom Jesus church with Portuguese colonial architecture -->
+                    <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="Basilica of Bom Jesus church" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="bg-purple-100 text-purple-800 text-xs px-2 py-1 rounded-full">Cultural</span>
+                            <div class="flex items-center">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <span class="ml-1 text-sm">4.6</span>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Basilica of Bom Jesus</h3>
+                        <p class="text-gray-600 text-sm mb-4">UNESCO World Heritage Site with stunning baroque architecture</p>
+                        <button class="bg-accent text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors w-full">Add to Itinerary</button>
+                    </div>
+                </div>
+
+                <!-- Sightseeing Location -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                    <!-- A pristine beach in Goa with golden sand, palm trees and clear blue waters -->
+                    <img src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="Pristine Goa beach with golden sand" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">Beach</span>
+                            <div class="flex items-center">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <span class="ml-1 text-sm">4.8</span>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Palolem Beach</h3>
+                        <p class="text-gray-600 text-sm mb-4">Crescent-shaped paradise perfect for relaxation and water sports</p>
+                        <button class="bg-accent text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors w-full">Add to Itinerary</button>
+                    </div>
+                </div>
+
+                <!-- Adventure Activity -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                    <!-- Exciting water sports activities with parasailing over tropical waters -->
+                    <img src="https://images.unsplash.com/photo-1530549387789-4c1017266635?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="Parasailing water sports activity" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full">Adventure</span>
+                            <div class="flex items-center">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <span class="ml-1 text-sm">4.5</span>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Water Sports at Baga</h3>
+                        <p class="text-gray-600 text-sm mb-4">Thrilling parasailing, jet skiing, and banana boat rides</p>
+                        <button class="bg-accent text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors w-full">Add to Itinerary</button>
+                    </div>
+                </div>
+
+                <!-- Nightlife -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                    <!-- Vibrant beach club at sunset with people dancing and enjoying music -->
+                    <img src="https://pixabay.com/get/g22096c5a70bc56c072264121ec645a533f0e2640c0f658a0b87b651fb93bc9d44b8c8c78ca9c1e42b5dd44ef3bbea9b25e3ba7757a0074a9bd36bfd173d308b3_1280.jpg" alt="Beach club at sunset" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="bg-pink-100 text-pink-800 text-xs px-2 py-1 rounded-full">Nightlife</span>
+                            <div class="flex items-center">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <span class="ml-1 text-sm">4.4</span>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Tito's Club</h3>
+                        <p class="text-gray-600 text-sm mb-4">Iconic nightclub with live DJ performances and beachside vibes</p>
+                        <button class="bg-accent text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors w-full">Add to Itinerary</button>
+                    </div>
+                </div>
+
+                <!-- Local Market -->
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden card-hover">
+                    <!-- Colorful local market with spices, textiles and handicrafts displayed beautifully -->
+                    <img src="https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&h=600" alt="Colorful local market with spices and handicrafts" class="w-full h-48 object-cover">
+                    <div class="p-6">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded-full">Shopping</span>
+                            <div class="flex items-center">
+                                <i class="fas fa-star text-yellow-400"></i>
+                                <span class="ml-1 text-sm">4.3</span>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-semibold mb-2">Anjuna Flea Market</h3>
+                        <p class="text-gray-600 text-sm mb-4">Vibrant market with local crafts, spices, and unique souvenirs</p>
+                        <button class="bg-accent text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition-colors w-full">Add to Itinerary</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Day-wise Itinerary Generator -->
+    <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-4">Your Perfect Itinerary</h2>
+                <p class="text-gray-600">AI-crafted day-by-day travel plan</p>
+            </div>
+            
+            <div class="max-w-4xl mx-auto">
+                <div class="flex justify-between items-center mb-8">
+                    <div>
+                        <h3 class="text-xl font-semibold">3-Day Goa Adventure</h3>
+                        <p class="text-gray-600">Kollam to Goa • Dec 15-17, 2024</p>
+                    </div>
+                    <div class="flex space-x-4">
+                        <button class="bg-secondary text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors">
+                            <i class="fas fa-download mr-2"></i>Download PDF
+                        </button>
+                        <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-envelope mr-2"></i>Email Itinerary
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Day 1 -->
+                <div class="bg-gray-50 rounded-xl p-6 mb-6">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center mr-3">1</div>
+                        <h4 class="text-lg font-semibold">Day 1 - Arrival & North Goa</h4>
+                    </div>
+                    <div class="space-y-4 ml-11">
+                        <div class="bg-white p-4 rounded-lg border-l-4 border-primary">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium">9:00 AM - Arrival at Goa Airport</p>
+                                    <p class="text-sm text-gray-600">Check-in at hotel and freshen up</p>
+                                </div>
+                                <i class="fas fa-plane text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border-l-4 border-secondary">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium">11:30 AM - Baga Beach</p>
+                                    <p class="text-sm text-gray-600">Water sports and beach relaxation</p>
+                                </div>
+                                <i class="fas fa-swimmer text-secondary"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border-l-4 border-accent">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium">1:00 PM - Lunch at Fisherman's Wharf</p>
+                                    <p class="text-sm text-gray-600">Authentic Goan seafood experience</p>
+                                </div>
+                                <i class="fas fa-utensils text-accent"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border-l-4 border-purple-500">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium">7:00 PM - Anjuna Flea Market</p>
+                                    <p class="text-sm text-gray-600">Shopping for local crafts and souvenirs</p>
+                                </div>
+                                <i class="fas fa-shopping-bag text-purple-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Day 2 -->
+                <div class="bg-gray-50 rounded-xl p-6 mb-6">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center mr-3">2</div>
+                        <h4 class="text-lg font-semibold">Day 2 - Cultural Heritage & Old Goa</h4>
+                    </div>
+                    <div class="space-y-4 ml-11">
+                        <div class="bg-white p-4 rounded-lg border-l-4 border-primary">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium">9:00 AM - Basilica of Bom Jesus</p>
+                                    <p class="text-sm text-gray-600">Explore UNESCO World Heritage Site</p>
+                                </div>
+                                <i class="fas fa-church text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border-l-4 border-secondary">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium">11:00 AM - Se Cathedral</p>
+                                    <p class="text-sm text-gray-600">Marvel at Portuguese architecture</p>
+                                </div>
+                                <i class="fas fa-landmark text-secondary"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border-l-4 border-accent">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium">1:00 PM - Traditional Goan Lunch</p>
+                                    <p class="text-sm text-gray-600">Experience local flavors in Panaji</p>
+                                </div>
+                                <i class="fas fa-utensils text-accent"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border-l-4 border-pink-500">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium">8:00 PM - Sunset Cruise</p>
+                                    <p class="text-sm text-gray-600">Romantic evening on Mandovi River</p>
+                                </div>
+                                <i class="fas fa-ship text-pink-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Day 3 -->
+                <div class="bg-gray-50 rounded-xl p-6">
+                    <div class="flex items-center mb-4">
+                        <div class="bg-primary text-white w-8 h-8 rounded-full flex items-center justify-center mr-3">3</div>
+                        <h4 class="text-lg font-semibold">Day 3 - South Goa & Departure</h4>
+                    </div>
+                    <div class="space-y-4 ml-11">
+                        <div class="bg-white p-4 rounded-lg border-l-4 border-primary">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium">8:00 AM - Palolem Beach</p>
+                                    <p class="text-sm text-gray-600">Peaceful morning at crescent beach</p>
+                                </div>
+                                <i class="fas fa-umbrella-beach text-primary"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border-l-4 border-secondary">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium">12:00 PM - Cabo de Rama Fort</p>
+                                    <p class="text-sm text-gray-600">Historic fort with stunning coastal views</p>
+                                </div>
+                                <i class="fas fa-fort-awesome text-secondary"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border-l-4 border-accent">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium">2:00 PM - Farewell Lunch</p>
+                                    <p class="text-sm text-gray-600">Last taste of Goan cuisine</p>
+                                </div>
+                                <i class="fas fa-utensils text-accent"></i>
+                            </div>
+                        </div>
+                        <div class="bg-white p-4 rounded-lg border-l-4 border-red-500">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <p class="font-medium">6:00 PM - Departure</p>
+                                    <p class="text-sm text-gray-600">Flight back to Kollam</p>
+                                </div>
+                                <i class="fas fa-plane-departure text-red-500"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Smart Travel Tools -->
+    <section class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4">
+            <div class="text-center mb-12">
+                <h2 class="text-3xl font-bold mb-4">Smart Travel Tools</h2>
+                <p class="text-gray-600">AI-powered assistants for seamless travel</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Weather Forecast -->
+                <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                    <div class="text-center">
+                        <i class="fas fa-cloud-sun text-4xl text-blue-500 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Weather Forecast</h3>
+                        <div class="bg-blue-50 p-4 rounded-lg">
+                            <p class="text-2xl font-bold text-blue-600">28°C</p>
+                            <p class="text-sm text-gray-600">Partly Cloudy</p>
+                            <p class="text-xs text-gray-500 mt-2">Perfect beach weather!</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Currency Converter -->
+                <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                    <div class="text-center">
+                        <i class="fas fa-exchange-alt text-4xl text-green-500 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Currency Converter</h3>
+                        <div class="space-y-2">
+                            <div class="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                <span class="text-sm">USD</span>
+                                <span class="font-medium">$1 = ₹83.12</span>
+                            </div>
+                            <div class="flex items-center justify-between bg-gray-50 p-2 rounded">
+                                <span class="text-sm">EUR</span>
+                                <span class="font-medium">€1 = ₹89.45</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Budget Tracker -->
+                <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                    <div class="text-center">
+                        <i class="fas fa-wallet text-4xl text-accent mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Budget Optimizer</h3>
+                        <div class="bg-orange-50 p-4 rounded-lg">
+                            <p class="text-sm text-gray-600">Total Budget</p>
+                            <p class="text-2xl font-bold text-accent">₹15,000</p>
+                            <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+                                <div class="bg-accent h-2 rounded-full" style="width: 65%"></div>
+                            </div>
+                            <p class="text-xs text-gray-500 mt-1">65% spent</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Travel Alerts -->
+                <div class="bg-white rounded-xl shadow-lg p-6 card-hover">
+                    <div class="text-center">
+                        <i class="fas fa-bell text-4xl text-red-500 mb-4"></i>
+                        <h3 class="text-lg font-semibold mb-2">Live Alerts</h3>
+                        <div class="space-y-2">
+                            <div class="bg-green-50 p-2 rounded text-xs">
+                                <span class="text-green-600">✓</span> Flight on time
+                            </div>
+                            <div class="bg-yellow-50 p-2 rounded text-xs">
+                                <span class="text-yellow-600">!</span> Light traffic on route
+                            </div>
+                            <div class="bg-blue-50 p-2 rounded text-xs">
+                                <span class="text-blue-600">i</span> Hotel check-in available
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Chatbot -->
+    <div class="fixed bottom-6 right-6 z-50">
+        <button id="chatbot-toggle" class="bg-primary text-white w-16 h-16 rounded-full shadow-lg hover:bg-blue-700 transition-colors flex items-center justify-center">
+            <i class="fas fa-robot text-2xl"></i>
+        </button>
+        
+        <!-- Chatbot Panel -->
+        <div id="chatbot-panel" class="absolute bottom-20 right-0 w-96 h-96 bg-white rounded-xl shadow-2xl border border-gray-200 hidden">
+            <div class="flex flex-col h-full">
+                <div class="bg-primary text-white p-4 rounded-t-xl">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <i class="fas fa-robot mr-2"></i>
+                            <span class="font-medium">WayWise AI Assistant</span>
+                        </div>
+                        <button id="chatbot-close" class="text-white hover:text-gray-200">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="flex-1 p-4 overflow-y-auto">
+                    <div class="space-y-4" id="chat-messages">
+                        <div class="bg-gray-100 p-3 rounded-lg max-w-xs">
+                            <p class="text-sm">Hi! I'm your AI travel assistant. How can I help you plan your perfect trip?</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="p-4 border-t border-gray-200">
+                    <div class="flex space-x-2">
+                        <input type="text" placeholder="Ask me anything about your trip..." class="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-sm">
+                        <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <button class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs hover:bg-gray-200">Best time to visit?</button>
+                        <button class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs hover:bg-gray-200">Local customs?</button>
+                        <button class="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs hover:bg-gray-200">Budget tips?</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-12">
+        <div class="container mx-auto px-4">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <i class="fas fa-compass text-primary text-2xl"></i>
+                        <span class="text-2xl font-bold">WayWise</span>
+                    </div>
+                    <p class="text-gray-400 mb-4">Your smart travel partner for unforgettable journeys powered by AI.</p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-facebook text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-twitter text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-instagram text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fab fa-linkedin text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Quick Links</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">About Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">How It Works</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Destinations</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Travel Guides</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Support</h4>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Help Center</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Contact Us</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Privacy Policy</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">Terms of Service</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="text-lg font-semibold mb-4">Download App</h4>
+                    <div class="space-y-3">
+                        <button class="bg-primary text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors w-full">
+                            <i class="fas fa-download mr-2"></i>Download Offline Trip
+                        </button>
+                        <div class="text-center">
+                            <span class="bg-gray-800 text-gray-300 px-3 py-1 rounded-full text-sm">
+                                <i class="fas fa-robot mr-1"></i>Powered by AI
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center">
+                <p class="text-gray-400">&copy; 2024 WayWise. All rights reserved. Made with ❤️ for travelers worldwide.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Chatbot functionality
+        (function() {
+            const chatbotToggle = document.getElementById('chatbot-toggle');
+            const chatbotPanel = document.getElementById('chatbot-panel');
+            const chatbotClose = document.getElementById('chatbot-close');
+
+            chatbotToggle.addEventListener('click', function() {
+                chatbotPanel.classList.toggle('hidden');
+            });
+
+            chatbotClose.addEventListener('click', function() {
+                chatbotPanel.classList.add('hidden');
+            });
+
+            // TODO: Implement actual chatbot functionality with AI responses
+            // TODO: Connect to backend API for real-time chat
+            // TODO: Add message history and conversation context
+        })();
+
+        // Smooth scrolling for navigation links
+        (function() {
+            document.addEventListener('DOMContentLoaded', function() {
+                // TODO: Implement smooth scrolling navigation
+                // TODO: Add active section highlighting in navigation
+                // TODO: Implement mobile menu toggle functionality
+            });
+        })();
+
+        // Form submission handling
+        (function() {
+            // TODO: Implement trip planning form submission
+            // TODO: Add form validation and error handling
+            // TODO: Connect to travel API for real route planning
+        })();
+
+        // Interactive features
+        (function() {
+            // TODO: Implement hotel booking functionality
+            // TODO: Add real-time pricing updates
+            // TODO: Implement itinerary editing and customization
+            // TODO: Add weather API integration
+            // TODO: Implement currency conversion with live rates
+        })();
+    </script>
+</body>
+</html>
