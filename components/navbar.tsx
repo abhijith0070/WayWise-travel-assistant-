@@ -3,35 +3,45 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
-import { useState } from "react"
+import { useState, useEffect } from "react"
+import { usePathname } from "next/navigation"
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const pathname = usePathname()
+  
+  // Determine if we're on a page with dark background (like home with video)
+  const isDarkBackground = pathname === "/" || pathname === "/plan-trip"
+  const textColorClass = isDarkBackground ? "text-white" : "text-gray-800"
+  const hoverColorClass = isDarkBackground ? "hover:text-orange-300" : "hover:text-orange-600"
 
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 gradient-primary shadow-lg">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-transparent">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link href="/" className="flex items-center space-x-2">
-            <div className="text-white font-serif font-bold text-2xl">Way-Wise</div>
+            <div className={`font-serif font-bold text-2xl ${textColorClass}`}>Way-Wise</div>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link href="/" className="text-white hover:text-orange-300 transition-colors font-medium">
+            <Link href="/" className={`${textColorClass} ${hoverColorClass} transition-colors font-medium`}>
               Home
             </Link>
-            <Link href="/features" className="text-white hover:text-orange-300 transition-colors font-medium">
+            <Link href="/features" className={`${textColorClass} ${hoverColorClass} transition-colors font-medium`}>
               Features
             </Link>
-            <Link href="/services" className="text-white hover:text-orange-300 transition-colors font-medium">
+            <Link href="/services" className={`${textColorClass} ${hoverColorClass} transition-colors font-medium`}>
               Services
             </Link>
-            <Link href="/about" className="text-white hover:text-orange-300 transition-colors font-medium">
+            <Link href="/founders" className={`${textColorClass} ${hoverColorClass} transition-colors font-medium`}>
+              Founders
+            </Link>
+            <Link href="/about" className={`${textColorClass} ${hoverColorClass} transition-colors font-medium`}>
               About Us
             </Link>
-            <Link href="/contact" className="text-white hover:text-orange-300 transition-colors font-medium">
+            <Link href="/contact" className={`${textColorClass} ${hoverColorClass} transition-colors font-medium`}>
               Contact
             </Link>
             <Button
@@ -48,7 +58,7 @@ export function Navbar() {
               variant="ghost"
               size="sm"
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className="text-white hover:bg-white/10"
+              className={`${textColorClass} hover:bg-black/10`}
             >
               {isMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </Button>
@@ -57,38 +67,45 @@ export function Navbar() {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden bg-white/10 backdrop-blur-sm rounded-lg mt-2 p-4 space-y-3">
+          <div className="md:hidden bg-black/20 backdrop-blur-sm rounded-lg mt-2 p-4 space-y-3">
             <Link
               href="/"
-              className="block text-white hover:text-orange-300 transition-colors font-medium py-2"
+              className={`block ${textColorClass} ${hoverColorClass} transition-colors font-medium py-2`}
               onClick={() => setIsMenuOpen(false)}
             >
               Home
             </Link>
             <Link
               href="/features"
-              className="block text-white hover:text-orange-300 transition-colors font-medium py-2"
+              className={`block ${textColorClass} ${hoverColorClass} transition-colors font-medium py-2`}
               onClick={() => setIsMenuOpen(false)}
             >
               Features
             </Link>
             <Link
               href="/services"
-              className="block text-white hover:text-orange-300 transition-colors font-medium py-2"
+              className={`block ${textColorClass} ${hoverColorClass} transition-colors font-medium py-2`}
               onClick={() => setIsMenuOpen(false)}
             >
               Services
             </Link>
             <Link
+              href="/founders"
+              className={`block ${textColorClass} ${hoverColorClass} transition-colors font-medium py-2`}
+              onClick={() => setIsMenuOpen(false)}
+            >
+              Founders
+            </Link>
+            <Link
               href="/about"
-              className="block text-white hover:text-orange-300 transition-colors font-medium py-2"
+              className={`block ${textColorClass} ${hoverColorClass} transition-colors font-medium py-2`}
               onClick={() => setIsMenuOpen(false)}
             >
               About Us
             </Link>
             <Link
               href="/contact"
-              className="block text-white hover:text-orange-300 transition-colors font-medium py-2"
+              className={`block ${textColorClass} ${hoverColorClass} transition-colors font-medium py-2`}
               onClick={() => setIsMenuOpen(false)}
             >
               Contact

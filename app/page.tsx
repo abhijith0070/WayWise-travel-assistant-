@@ -2,6 +2,7 @@ import { Navbar } from "@/components/navbar"
 import { HeroSection } from "@/components/hero-section"
 import { AboutSection } from "@/components/about-section"
 import { ServicesSection } from "@/components/services-section"
+import { SpeakerSection } from "@/components/Founders-section"
 import { Footer } from "@/components/footer"
 import { Chatbot } from "@/components/chatbot"
 
@@ -13,6 +14,7 @@ export default function HomePage() {
         <HeroSection />
         <AboutSection />
         <ServicesSection />
+        <SpeakerSection />
       </main>
       <Footer />
       <Chatbot />

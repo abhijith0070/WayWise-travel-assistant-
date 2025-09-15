@@ -1,3 +1,6 @@
+"use client"
+
+import { motion } from "framer-motion"
 import { MapPin, Users, Award, Globe } from "lucide-react"
 
 export function AboutSection() {
@@ -59,26 +62,30 @@ export function AboutSection() {
             </div>
           </div>
 
-          {/* Right Column - Illustration */}
-          <div className="animate-slide-up">
-            <div className="relative">
-              <video
-                src="/way.mp4"
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-auto rounded-2xl shadow-2xl"
-                poster="/ww.jpg"
-              />
-              <div className="absolute -top-6 -right-6 w-24 h-24 bg-orange-500 rounded-full flex items-center justify-center shadow-lg">
-                <Globe className="w-12 h-12 text-white" />
-              </div>
-              <div className="absolute -bottom-6 -left-6 w-20 h-20 bg-cyan-500 rounded-full flex items-center justify-center shadow-lg">
-                <MapPin className="w-10 h-10 text-white" />
-              </div>
+          {/* Right Column - Video with Transition */}
+          <motion.div
+            initial={{ opacity: 0, y: 100, scale: 0.9 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 1, ease: "easeOut" }}
+            viewport={{ once: true, amount: 0.4 }}
+            className="relative"
+          >
+            <video
+              src="/way.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-auto rounded-2xl shadow-2xl"
+              poster="/ww.jpg"
+            />
+            <div className="absolute -top-6 -right-6 w-24 h-24 bg-orange-500 rounded-full flex items-center justify-center shadow-lg">
+              <Globe className="w-12 h-12 text-white" />
             </div>
-          </div>
+            <div className="absolute -bottom-6 -left-6 w-20 h-20 bg-cyan-500 rounded-full flex items-center justify-center shadow-lg">
+              <MapPin className="w-10 h-10 text-white" />
+            </div>
+          </motion.div>
         </div>
       </div>
     </section>

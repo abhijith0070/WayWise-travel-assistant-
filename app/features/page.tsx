@@ -1,7 +1,9 @@
 "use client";
 
 import { ShieldCheck, Rocket, Users, Map, Calendar, Star } from "lucide-react";
-import { Navbar } from "@/components/Navbar"; // Adjust path if needed
+import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
+import { Chatbot } from "@/components/chatbot";
 
 const features = [
 	{
@@ -38,38 +40,40 @@ const features = [
 
 export default function FeaturesPage() {
 	return (
-		<main className="min-h-screen bg-gradient-to-br from-indigo-500 via-blue-400 to-teal-300 relative">
-			{/* Fixed Navbar */}
+		<div className="min-h-screen bg-gray-50">
 			<Navbar />
+			<main className="pt-16">
+				{/* Hero Section */}
+				<section className="pt-16 pb-10 text-center max-w-3xl mx-auto px-4 bg-gradient-to-br from-indigo-500 via-blue-400 to-teal-300">
+					<h1 className="text-4xl font-bold text-white mb-4">
+						Our Key Features
+					</h1>
+					<p className="text-lg text-blue-50">
+						Explore the innovative tools and services that make WayWise the
+						perfect travel companion.
+					</p>
+				</section>
 
-			{/* Hero Section */}
-			<section className="pt-32 pb-10 text-center max-w-3xl mx-auto px-4">
-				<h1 className="text-4xl font-bold text-white mb-4">
-					Our Key Features
-				</h1>
-				<p className="text-lg text-blue-50">
-					Explore the innovative tools and services that make WayWise the
-					perfect travel companion.
-				</p>
-			</section>
-
-			{/* Features Grid */}
-			<section className="max-w-6xl mx-auto px-4 pb-16">
-				<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
-					{features.map((feature, idx) => (
-						<div
-							key={idx}
-							className="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center text-center transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl group"
-						>
-							<div className="mb-4">{feature.icon}</div>
-							<h3 className="text-xl font-semibold text-indigo-800 mb-2 group-hover:text-orange-500 transition-colors">
-								{feature.title}
-							</h3>
-							<p className="text-gray-600">{feature.desc}</p>
-						</div>
-					))}
-				</div>
-			</section>
-		</main>
+				{/* Features Grid */}
+				<section className="max-w-6xl mx-auto px-4 py-16">
+					<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+						{features.map((feature, idx) => (
+							<div
+								key={idx}
+								className="bg-white rounded-2xl shadow-lg p-8 flex flex-col items-center text-center transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl group"
+							>
+								<div className="mb-4">{feature.icon}</div>
+								<h3 className="text-xl font-semibold text-indigo-800 mb-2 group-hover:text-orange-500 transition-colors">
+									{feature.title}
+								</h3>
+								<p className="text-gray-600">{feature.desc}</p>
+							</div>
+						))}
+					</div>
+				</section>
+			</main>
+			<Footer />
+			<Chatbot />
+		</div>
 	);
 }
