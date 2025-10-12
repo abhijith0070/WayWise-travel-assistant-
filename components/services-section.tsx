@@ -1,7 +1,11 @@
+"use client";
+
+import { motion } from "framer-motion"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Route, Plane, Hotel, MapPin, Fuel, Brain, ArrowRight, Star } from "lucide-react"
 import Link from "next/link"
+import { fadeInUp, staggerContainer, scaleIn } from "@/lib/animations"
 
 const services = [
   {
@@ -86,65 +90,93 @@ export function ServicesSection() {
     <section className="py-20 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Section Header */}
-        <div className="text-center mb-16 animate-fade-in">
-          <h2 className="text-4xl font-serif font-bold text-indigo-900 mb-6">Our Services</h2>
-          <p className="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.3 }}
+          variants={staggerContainer}
+          className="text-center mb-16"
+        >
+          <motion.h2 
+            variants={fadeInUp}
+            className="text-4xl font-serif font-bold text-indigo-900 mb-6"
+          >
+            Our Services
+          </motion.h2>
+          <motion.p 
+            variants={fadeInUp}
+            className="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed"
+          >
             Comprehensive travel solutions powered by AI and backed by years of industry expertise. Everything you need
             for the perfect journey, all in one place.
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         {/* Services Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 animate-slide-up">
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, amount: 0.2 }}
+          variants={staggerContainer}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+        >
           {services.map((service, index) => {
             const Icon = service.icon
             const colors = colorClasses[service.color as keyof typeof colorClasses]
 
             return (
-              <Card
+              <motion.div
                 key={index}
-                className="group hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-lg bg-white"
+                variants={scaleIn}
               >
-                <CardHeader className="pb-4">
-                  <div
-                    className={`w-16 h-16 ${colors.bg} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}
-                  >
-                    <Icon className={`w-8 h-8 ${colors.icon}`} />
-                  </div>
-                  <CardTitle className="text-xl font-serif font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors">
-                    {service.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <p className="text-gray-600 mb-6 leading-relaxed">{service.description}</p>
-
-                  {/* Rating */}
-                  <div className="flex items-center mb-4">
-                    <div className="flex items-center space-x-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                      ))}
+                <Card className="group hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 border-0 shadow-lg bg-white h-full">
+                  <CardHeader className="pb-4">
+                    <div
+                      className={`w-16 h-16 ${colors.bg} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}
+                    >
+                      <Icon className={`w-8 h-8 ${colors.icon}`} />
                     </div>
-                    <span className="text-sm text-gray-500 ml-2">4.9/5</span>
-                  </div>
+                    <CardTitle className="text-xl font-serif font-bold text-indigo-900 group-hover:text-indigo-700 transition-colors">
+                      {service.title}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="pt-0">
+                    <p className="text-gray-600 mb-6 leading-relaxed">{service.description}</p>
 
-                  <Button
-                    asChild
-                    className={`w-full ${colors.button} text-white font-medium transition-all duration-300 group-hover:scale-105`}
-                  >
-                    <Link href={service.href} className="flex items-center justify-center">
-                      Learn More
-                      <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
+                    {/* Rating */}
+                    <div className="flex items-center mb-4">
+                      <div className="flex items-center space-x-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                        ))}
+                      </div>
+                      <span className="text-sm text-gray-500 ml-2">4.9/5</span>
+                    </div>
+
+                    <Button
+                      asChild
+                      className={`w-full ${colors.button} text-white font-medium transition-all duration-300 group-hover:scale-105`}
+                    >
+                      <Link href={service.href} className="flex items-center justify-center">
+                        Learn More
+                        <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                      </Link>
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
             )
           })}
-        </div>
+        </motion.div>
 
         {/* CTA Section */}
-        <div className="text-center mt-16 animate-fade-in">
+        <motion.div 
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true }}
+          variants={fadeInUp}
+          className="text-center mt-16"
+        >
           <div className="bg-white rounded-2xl shadow-xl p-8 max-w-2xl mx-auto">
             <h3 className="text-2xl font-serif font-bold text-indigo-900 mb-4">Ready to Start Your Journey?</h3>
             <p className="text-gray-600 mb-6">
@@ -161,7 +193,7 @@ export function ServicesSection() {
               </Link>
             </Button>
           </div>
-        </div>
+        </motion.div>
       </div>
     </section>
   )

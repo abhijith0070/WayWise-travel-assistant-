@@ -1,16 +1,21 @@
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Calendar, MapPin, Plane, Search, Sparkles } from "lucide-react"
+import { Calendar, MapPin, Plane, Search, Sparkles, Loader2 } from "lucide-react"
+import { useToast } from "@/hooks/use-toast"
 
 export function HeroSection() {
+  const router = useRouter()
+  const { toast } = useToast()
   const [searchType, setSearchType] = useState("manual")
+  const [isLoading, setIsLoading] = useState(false)
   const [manualSearch, setManualSearch] = useState({
     from: "",
     to: "",
@@ -20,11 +25,58 @@ export function HeroSection() {
   const [aiPrompt, setAiPrompt] = useState("")
 
   const handleManualSearch = () => {
-    console.log("Manual search:", manualSearch)
+    if (!manualSearch.from || !manualSearch.to) {
+      toast({
+        title: "Missing Information",
+        description: "Please enter both departure and destination cities.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    // Build AI prompt from manual inputs
+    const prompt = `Plan a trip from ${manualSearch.from} to ${manualSearch.to}${
+      manualSearch.date ? ` on ${manualSearch.date}` : ""
+    }${manualSearch.mode ? ` by ${manualSearch.mode}` : ""}.`
+
+    handleAiSearch(prompt)
   }
 
-  const handleAiSearch = () => {
-    console.log("AI search:", aiPrompt)
+  const handleAiSearch = async (customPrompt?: string) => {
+    const prompt = customPrompt || aiPrompt
+
+    if (!prompt.trim()) {
+      toast({
+        title: "Empty Prompt",
+        description: "Please describe your trip requirements.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsLoading(true)
+
+    try {
+      // Store prompt in session storage for trip planner page
+      sessionStorage.setItem("tripPrompt", prompt)
+      
+      // Navigate to trip planner page
+      router.push("/plan-trip?generate=true")
+      
+      toast({
+        title: "Generating Trip Plan",
+        description: "Please wait while we create your personalized itinerary...",
+      })
+    } catch (error) {
+      console.error("Navigation error:", error)
+      toast({
+        title: "Error",
+        description: "Failed to navigate to trip planner. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
@@ -145,11 +197,21 @@ export function HeroSection() {
 
               <Button
                 onClick={handleManualSearch}
-                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg"
+                disabled={isLoading}
+                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 size="lg"
               >
-                <Search className="w-5 h-5 mr-2" />
-                Search Routes
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Searching...
+                  </>
+                ) : (
+                  <>
+                    <Search className="w-5 h-5 mr-2" />
+                    Search Routes
+                  </>
+                )}
               </Button>
             </TabsContent>
 
@@ -173,12 +235,22 @@ export function HeroSection() {
               </div>
 
               <Button
-                onClick={handleAiSearch}
-                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg"
+                onClick={() => handleAiSearch()}
+                disabled={isLoading}
+                className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-lg transition-all duration-300 hover:scale-105 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
                 size="lg"
               >
-                <Sparkles className="w-5 h-5 mr-2" />
-                Generate AI Itinerary
+                {isLoading ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    Generate AI Itinerary
+                  </>
+                )}
               </Button>
             </TabsContent>
           </Tabs>
