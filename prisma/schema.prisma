@@ -1,0 +1,53 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// Transport Modes (Bus, Train, Flight, Car, etc.)
+model TransportMode {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  description String?
+  icon        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  // Relations
+  routes      Route[]
+}
+
+// Transport Routes
+model Route {
+  id            Int           @id @default(autoincrement())
+  source        String
+  destination   String
+  mode          String
+  modeId        Int
+  distance      String?       // e.g., "150 km"
+  duration      String        // e.g., "6h 30m"
+  price         Float
+  operatorName  String
+  departureTime String?       // e.g., "09:00 AM"
+  arrivalTime   String?       // e.g., "03:30 PM"
+  frequency     String?       // e.g., "Daily", "Mon-Fri"
+  amenities     String?       // JSON string: e.g., '["AC", "WiFi", "Food"]'
+  available     Boolean       @default(true)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  
+  // Relations
+  transportMode TransportMode @relation(fields: [modeId], references: [id])
+  
+  @@index([source, destination, mode])
+  @@index([mode])
+}

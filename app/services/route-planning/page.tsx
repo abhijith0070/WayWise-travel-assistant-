@@ -30,9 +30,14 @@ export default function RoutePlanningPage() {
             <p className="text-xl text-white/90 max-w-3xl mx-auto mb-8">
               Optimize your travel routes with AI-powered algorithms for the most efficient and scenic journeys.
             </p>
-            <Button asChild size="lg" className="bg-orange-500 hover:bg-orange-600 text-white font-semibold px-8 py-3">
-              <Link href="/plan-trip">Start Route Planning</Link>
-            </Button>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Button asChild size="lg" className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold px-8 py-3">
+                <Link href="/plan-trip">AI Trip Planner</Link>
+              </Button>
+              <Button asChild size="lg" variant="outline" className="bg-white hover:bg-gray-50 text-indigo-600 border-2 border-white font-semibold px-8 py-3">
+                <Link href="/search-routes">Search Routes</Link>
+              </Button>
+            </div>
           </div>
         </section>
 

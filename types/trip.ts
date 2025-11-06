@@ -1,32 +1,45 @@
 export interface TripPlan {
   destination: string;
   from: string;
+  title: string;
+  description: string;
   duration: string;
   budget: string;
+  estimatedBudget: string;
+  bestFor: string;
+  season: string;
   bestTimeToVisit: string;
   overview: string;
-  itinerary: DayItinerary[];
+  itinerary: DayPlan[];
   transportation: Transportation;
   budgetBreakdown: BudgetBreakdown;
   packingList: string[];
   localTips: string[];
+  tips: string[];
   mustTryFoods: string[];
   mustVisitPlaces: string[];
+  source?: string; // AI service that generated this plan
 }
 
-export interface DayItinerary {
+export interface DayPlan {
   day: number;
   title: string;
+  description?: string;
   activities: Activity[];
   meals: Meals;
   accommodation: string;
 }
 
+// Keep backward compatibility
+export interface DayItinerary extends DayPlan {}
+
 export interface Activity {
   time: string;
   activity: string;
-  description: string;
+  description?: string;
+  location?: string;
   cost: string;
+  estimatedCost?: string;
 }
 
 export interface Meals {
