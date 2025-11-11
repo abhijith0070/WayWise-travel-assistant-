@@ -35,10 +35,9 @@ export function HeroSection() {
     }
 
     // Redirect to manual route search page with query parameters
-    // DO NOT call handleAiSearch - this is manual search only
     const params = new URLSearchParams({
-      from: manualSearch.from.trim(),
-      to: manualSearch.to.trim(),
+      from: manualSearch.from,
+      to: manualSearch.to,
       ...(manualSearch.mode && { mode: manualSearch.mode }),
       ...(manualSearch.date && { date: manualSearch.date }),
     })

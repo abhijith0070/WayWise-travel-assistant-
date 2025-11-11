@@ -2,6 +2,7 @@ import type React from "react"
 import type { Metadata } from "next"
 import { Poppins, Open_Sans } from "next/font/google"
 import { Toaster } from "@/components/ui/toaster"
+import { AuthProvider } from "@/contexts/AuthContext"
 import "./globals.css"
 
 const poppins = Poppins({
@@ -32,8 +33,10 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${poppins.variable} ${openSans.variable} antialiased`}>
       <body>
-        {children}
-        <Toaster />
+        <AuthProvider>
+          {children}
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   )

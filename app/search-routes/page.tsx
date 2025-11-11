@@ -8,43 +8,103 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
-import { Loader2, Search, MapPin, Clock, DollarSign, Bus, Train, Plane, Car, ArrowLeft } from "lucide-react"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Loader2, Search, MapPin, Clock, Plane, Train as TrainIcon, ArrowLeft, Calendar, Building, Info } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { routesData, cities } from "@/data/routesData"
-import { matchCity } from "@/utils/fuzzyMatch"
+import { toIataCode } from "@/lib/airportMapping"
+import { toStationCode } from "@/lib/stationMapping"
 
-const getModeIcon = (mode: string) => {
-  const modeLower = mode.toLowerCase()
-  if (modeLower.includes('bus')) return <Bus className="w-5 h-5" />
-  if (modeLower.includes('train')) return <Train className="w-5 h-5" />
-  if (modeLower.includes('flight')) return <Plane className="w-5 h-5" />
-  if (modeLower.includes('car')) return <Car className="w-5 h-5" />
-  return <MapPin className="w-5 h-5" />
+type SearchMode = "flight" | "train"
+
+interface Flight {
+  airline: string
+  flightNumber: string
+  flightIata: string
+  flightIcao: string
+  departure: {
+    airport: string
+    iata: string
+    timezone: string
+    scheduledTime: string
+    estimatedTime: string
+    actualTime: string | null
+    terminal: string | null
+    gate: string | null
+  }
+  arrival: {
+    airport: string
+    iata: string
+    timezone: string
+    scheduledTime: string
+    estimatedTime: string
+    actualTime: string | null
+    terminal: string | null
+    gate: string | null
+  }
+  flightStatus: string
+  flightDate: string
+  aircraftType: string | null
 }
 
-interface Route {
-  id?: number
-  from?: string
-  to?: string
-  mode: string
-  price: string | number
-  duration: string
-  operator?: string
-  amenities?: string[]
-  image?: string
+interface Train {
+  trainNumber: string
+  trainName: string
+  from: string
+  to: string
+  fromCode: string
+  toCode: string
+  departureTime: string
+  arrivalTime: string
+  currentStatus?: string
+  currentLocation?: string
+  runningStatus?: string
+  delay?: string
+  travelClass?: string
+  quota?: string
+  availability?: any[]
+  fare?: string
+  distance?: string
+  duration?: string
+  date: string
+  type: "live-status" | "seat-availability"
+}
+
+const getStatusBadgeColor = (status: string) => {
+  const statusLower = status.toLowerCase()
+  if (statusLower === 'active' || statusLower === 'landed' || statusLower === 'running') return 'bg-green-600'
+  if (statusLower === 'scheduled' || statusLower === 'on time') return 'bg-blue-600'
+  if (statusLower === 'cancelled') return 'bg-red-600'
+  if (statusLower === 'delayed') return 'bg-yellow-600'
+  return 'bg-gray-600'
+}
+
+const formatDateTime = (dateTimeString: string) => {
+  if (!dateTimeString || dateTimeString === 'N/A') return 'N/A'
+  try {
+    const date = new Date(dateTimeString)
+    return date.toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return dateTimeString
+  }
 }
 
 function SearchRoutesContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [mode, setMode] = useState<SearchMode>("flight")
   const [from, setFrom] = useState("")
   const [to, setTo] = useState("")
-  const [mode, setMode] = useState("AUTO")
-  const [date, setDate] = useState("")
+  const [trainNumber, setTrainNumber] = useState("")
+  const [travelClass, setTravelClass] = useState("SL")
   const [isLoading, setIsLoading] = useState(false)
-  const [routes, setRoutes] = useState<Route[]>([])
+  const [flights, setFlights] = useState<Flight[]>([])
+  const [trains, setTrains] = useState<Train[]>([])
   const [error, setError] = useState<string | null>(null)
   const [searched, setSearched] = useState(false)
   const lastSearchRef = useRef<string>("")
@@ -53,154 +113,196 @@ function SearchRoutesContent() {
   useEffect(() => {
     const fromParam = searchParams.get('from')
     const toParam = searchParams.get('to')
-    const modeParam = searchParams.get('mode')
-    const dateParam = searchParams.get('date')
+    const modeParam = searchParams.get('mode') as SearchMode | null
     
     // Set form values from URL params
     if (fromParam) setFrom(fromParam)
     if (toParam) setTo(toParam)
-    // Handle mode param - default to "AUTO" if empty or missing
-    if (modeParam) {
+    if (modeParam && (modeParam === 'flight' || modeParam === 'train')) {
       setMode(modeParam)
-    } else {
-      setMode("AUTO")
     }
-    if (dateParam) setDate(dateParam)
     
     // Create a unique key for this search to prevent duplicate calls
-    // Normalize mode param - treat empty/null as 'AUTO'
-    const normalizedMode = modeParam && modeParam !== 'all' ? modeParam : 'AUTO'
-    const searchKey = `${fromParam || ''}|${toParam || ''}|${normalizedMode}|${dateParam || ''}`
+    const searchKey = `${modeParam || 'flight'}|${fromParam || ''}|${toParam || ''}`
     
     // Auto-search if both from and to are provided
     // Only trigger if params have changed and not already loading
     if (fromParam && toParam && searchKey !== lastSearchRef.current && !isLoading) {
       lastSearchRef.current = searchKey
       // Trigger search with params directly
-      fetchRoutes(fromParam, toParam, modeParam || "", dateParam || "")
+      if (modeParam === 'train') {
+        fetchTrains(fromParam, toParam)
+      } else {
+        fetchFlights(fromParam, toParam)
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams])
 
-  const fetchRoutes = async (fromCity?: string, toCity?: string, modeType?: string, dateParam?: string) => {
+  const fetchFlights = async (fromCity?: string, toCity?: string) => {
     const searchFrom = fromCity || from
     const searchTo = toCity || to
-    let searchMode = modeType !== undefined ? modeType : mode
-    
-    // Map old mode values to new format
-    const modeMap: Record<string, string> = {
-      'AUTO': '',
-      'all': '',
-      'Bus': 'Bus',
-      'Train': 'Train',
-      'Flight': 'Flight',
-      'Car': 'Car',
-      'BUS': 'Bus',
-      'TRAIN': 'Train',
-      'FLIGHT': 'Flight',
-    }
-    if (modeMap[searchMode] !== undefined) {
-      searchMode = modeMap[searchMode]
-    }
     
     if (!searchFrom.trim() || !searchTo.trim()) {
-      setError("Please enter both source and destination")
+      setError("Please enter both departure and arrival cities")
+      return
+    }
+
+    // Convert city names to IATA codes
+    const fromIata = toIataCode(searchFrom)
+    const toIata = toIataCode(searchTo)
+
+    if (!fromIata || !toIata) {
+      setError(`Unable to find airport codes for "${searchFrom}" or "${searchTo}". Please try major city names or IATA codes.`)
       return
     }
 
     setIsLoading(true)
     setError(null)
-    setRoutes([])
+    setFlights([])
     setSearched(false)
 
     try {
-      console.log(`🔍 Searching routes: ${searchFrom} → ${searchTo}`)
+      console.log(`✈️ Searching flights: ${searchFrom} (${fromIata}) → ${searchTo} (${toIata})`)
 
-      // TRY SCRAPING ROME2RIO FIRST
-      const scrapeResponse = await fetch('/api/scrape-routes', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ 
-          from: searchFrom.trim(), 
-          to: searchTo.trim(), 
-          mode: searchMode,
+      // Fetch flights in both directions
+      const [outboundResponse, inboundResponse] = await Promise.all([
+        fetch('/api/flights', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ from: fromIata, to: toIata }),
         }),
-      })
+        fetch('/api/flights', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ from: toIata, to: fromIata }),
+        }),
+      ])
 
-      const scrapeData = await scrapeResponse.json()
+      const outboundData = await outboundResponse.json()
+      const inboundData = await inboundResponse.json()
 
-      if (scrapeData.success && scrapeData.routes && scrapeData.routes.length > 0) {
-        console.log(`✅ Successfully scraped ${scrapeData.routes.length} routes from Rome2Rio`)
-        
-        // Format scraped routes to match our interface
-        const formattedRoutes = scrapeData.routes.map((route: any, index: number) => ({
-          id: index + 1,
-          from: searchFrom,
-          to: searchTo,
-          mode: route.mode,
-          price: route.price,
-          duration: route.duration,
-          operator: route.operator || 'Various operators',
-          amenities: ['Web scraped data'],
-          image: '/images/default.jpg',
-        }))
+      // Combine flights from both directions
+      const allFlights: Flight[] = [
+        ...(outboundData.success ? outboundData.flights : []),
+        ...(inboundData.success ? inboundData.flights : []),
+      ]
 
-        setRoutes(formattedRoutes)
+      if (allFlights.length > 0) {
+        console.log(`✅ Found ${allFlights.length} flight(s)`)
+        setFlights(allFlights)
         setSearched(true)
         setError(null)
-        setIsLoading(false)
-        return
-      }
-
-      // FALLBACK TO DUMMY DATA if scraping fails
-      console.log('⚠️ Scraping failed or no routes found, using dummy data fallback...')
-      
-      const matchedFrom = matchCity(searchFrom, cities)
-      const matchedTo = matchCity(searchTo, cities)
-
-      if (!matchedFrom || !matchedTo) {
-        setError(`No routes found from "${searchFrom}" to "${searchTo}". Try cities like: ${cities.slice(0, 5).join(', ')}, etc.`)
-        setRoutes([])
+      } else {
+        const errorMsg = outboundData.message || inboundData.message || `No flights found between ${searchFrom} and ${searchTo}`
+        setError(errorMsg)
+        setFlights([])
         setSearched(true)
-        setIsLoading(false)
-        return
       }
-
-      const results = routesData.filter(route =>
-        route.from === matchedFrom &&
-        route.to === matchedTo &&
-        (!searchMode || route.mode === searchMode)
-      )
-
-      if (results.length > 0) {
-        console.log(`✅ Found ${results.length} routes in dummy data`)
-      }
-
-      setRoutes(results)
-      setSearched(true)
-      setError(null)
     } catch (err) {
-      console.error('❌ Search error:', err)
-      setError('Search failed. Please try again.')
-      setRoutes([])
+      console.error('❌ Flight search error:', err)
+      setError('Failed to search flights. Please try again.')
+      setFlights([])
       setSearched(true)
     } finally {
       setIsLoading(false)
     }
   }
 
-  // Alias for backward compatibility with button click
-  const searchRoutes = () => {
+  const fetchTrains = async (fromCity?: string, toCity?: string) => {
+    const searchFrom = fromCity || from
+    const searchTo = toCity || to
+    const searchTrainNumber = trainNumber.trim()
+    
+    // Either train number OR both from/to required
+    if (!searchTrainNumber && (!searchFrom.trim() || !searchTo.trim())) {
+      setError("Please enter train number or both source and destination stations")
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+    setTrains([])
+    setSearched(false)
+
+    try {
+      let fromStation = "";
+      let toStation = "";
+
+      // Convert city names to station codes if from/to provided
+      if (searchFrom && searchTo) {
+        fromStation = toStationCode(searchFrom)
+        toStation = toStationCode(searchTo)
+
+        if (!fromStation || !toStation) {
+          setError(`Unable to find station codes for "${searchFrom}" or "${searchTo}". Please try major city names or station codes.`)
+          setIsLoading(false)
+          return
+        }
+      }
+
+      console.log(`🚂 Searching trains: ${searchTrainNumber || `${searchFrom} (${fromStation}) → ${searchTo} (${toStation})`}`)
+
+      const response = await fetch('/api/trains', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          trainNumber: searchTrainNumber || undefined,
+          from: fromStation || undefined,
+          to: toStation || undefined,
+          classCode: travelClass,
+          quota: "GN"
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.success && data.trains && data.trains.length > 0) {
+        console.log(`✅ Found ${data.trains.length} train(s)`)
+        setTrains(data.trains)
+        setSearched(true)
+        setError(null)
+      } else {
+        const errorMsg = data.message || `No trains found`
+        setError(errorMsg)
+        setTrains([])
+        setSearched(true)
+      }
+    } catch (err) {
+      console.error('❌ Train search error:', err)
+      setError('Failed to search trains. Please try again.')
+      setTrains([])
+      setSearched(true)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Unified search handler
+  const handleSearch = () => {
     // Reset last search key to allow manual re-search
     lastSearchRef.current = ""
-    fetchRoutes()
+    if (mode === 'flight') {
+      fetchFlights()
+    } else {
+      fetchTrains()
+    }
+  }
+
+  // Alias for backward compatibility with button click
+  const searchFlights = () => {
+    // Reset last search key to allow manual re-search
+    lastSearchRef.current = ""
+    fetchFlights()
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && !isLoading && from.trim() && to.trim()) {
-      searchRoutes()
+    if (e.key === 'Enter' && !isLoading) {
+      if (mode === 'flight' && from.trim() && to.trim()) {
+        handleSearch()
+      } else if (mode === 'train' && (trainNumber.trim() || (from.trim() && to.trim()))) {
+        handleSearch()
+      }
     }
   }
 
@@ -221,11 +323,19 @@ function SearchRoutesContent() {
             </Button>
             <div className="text-center text-white">
               <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Search className="w-8 h-8 text-white" />
+                {mode === 'flight' ? (
+                  <Plane className="w-8 h-8 text-white" />
+                ) : (
+                  <TrainIcon className="w-8 h-8 text-white" />
+                )}
               </div>
-              <h1 className="text-4xl font-serif font-bold mb-4">Search Transport Routes</h1>
+              <h1 className="text-4xl font-serif font-bold mb-4">
+                {mode === 'flight' ? 'Search Real-Time Flights' : 'Search Indian Trains'}
+              </h1>
               <p className="text-lg text-white/90 max-w-2xl mx-auto">
-                Find available buses, trains, flights, and car rentals for your journey
+                {mode === 'flight' 
+                  ? 'Find live flight information powered by AviationStack API'
+                  : 'Find live train status and seat availability powered by IndianRailAPI'}
               </p>
             </div>
           </div>
@@ -238,67 +348,147 @@ function SearchRoutesContent() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Search className="w-5 h-5 text-indigo-600" />
-                  Search Routes
+                  {mode === 'flight' ? 'Search Flights' : 'Search Trains'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="from">From</Label>
-                    <Input
-                      id="from"
-                      value={from}
-                      onChange={(e) => setFrom(e.target.value)}
-                      onKeyDown={handleKeyPress}
-                      placeholder="e.g., Kochi, Mumbai"
-                      className="text-base"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="to">To</Label>
-                    <Input
-                      id="to"
-                      value={to}
-                      onChange={(e) => setTo(e.target.value)}
-                      onKeyDown={handleKeyPress}
-                      placeholder="e.g., Trivandrum, Pune"
-                      className="text-base"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="mode">Transport Mode</Label>
-                    <Select value={mode} onValueChange={setMode}>
-                      <SelectTrigger id="mode">
-                        <SelectValue placeholder="All modes" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All modes</SelectItem>
-                        <SelectItem value="Bus">Bus</SelectItem>
-                        <SelectItem value="Train">Train</SelectItem>
-                        <SelectItem value="Flight">Flight</SelectItem>
-                        <SelectItem value="Car">Car Rental</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
+                {/* Mode Selector */}
+                <div className="space-y-2">
+                  <Label htmlFor="mode">Transport Mode</Label>
+                  <Select value={mode} onValueChange={(value) => {
+                    setMode(value as SearchMode)
+                    setError(null)
+                    setSearched(false)
+                    setFlights([])
+                    setTrains([])
+                  }}>
+                    <SelectTrigger id="mode" className="text-base">
+                      <SelectValue placeholder="Select mode" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="flight">
+                        <div className="flex items-center gap-2">
+                          <Plane className="w-4 h-4" />
+                          <span>Flight</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="train">
+                        <div className="flex items-center gap-2">
+                          <TrainIcon className="w-4 h-4" />
+                          <span>Train</span>
+                        </div>
+                      </SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
+                {/* Flight Search Fields */}
+                {mode === 'flight' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="from">From (City or IATA Code)</Label>
+                      <Input
+                        id="from"
+                        value={from}
+                        onChange={(e) => setFrom(e.target.value)}
+                        onKeyDown={handleKeyPress}
+                        placeholder="e.g., Kochi, COK, Delhi, DEL"
+                        className="text-base"
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="to">To (City or IATA Code)</Label>
+                      <Input
+                        id="to"
+                        value={to}
+                        onChange={(e) => setTo(e.target.value)}
+                        onKeyDown={handleKeyPress}
+                        placeholder="e.g., Dubai, DXB, Mumbai, BOM"
+                        className="text-base"
+                      />
+                    </div>
+                  </div>
+                )}
+
+                {/* Train Search Fields */}
+                {mode === 'train' && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="trainNumber">Train Number (Optional)</Label>
+                      <Input
+                        id="trainNumber"
+                        value={trainNumber}
+                        onChange={(e) => setTrainNumber(e.target.value)}
+                        onKeyDown={handleKeyPress}
+                        placeholder="e.g., 12626 (Kerala Express)"
+                        className="text-base"
+                      />
+                      <p className="text-xs text-gray-500">Enter train number to get live status</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="from">From (City or Station Code)</Label>
+                        <Input
+                          id="from"
+                          value={from}
+                          onChange={(e) => setFrom(e.target.value)}
+                          onKeyDown={handleKeyPress}
+                          placeholder="e.g., Delhi, NDLS, Kochi, ERS"
+                          className="text-base"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="to">To (City or Station Code)</Label>
+                        <Input
+                          id="to"
+                          value={to}
+                          onChange={(e) => setTo(e.target.value)}
+                          onKeyDown={handleKeyPress}
+                          placeholder="e.g., Mumbai, CSTM, Trivandrum, TVC"
+                          className="text-base"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="class">Travel Class</Label>
+                        <Select value={travelClass} onValueChange={setTravelClass}>
+                          <SelectTrigger id="class">
+                            <SelectValue placeholder="Select class" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="1A">First AC (1A)</SelectItem>
+                            <SelectItem value="2A">Second AC (2A)</SelectItem>
+                            <SelectItem value="3A">Third AC (3A)</SelectItem>
+                            <SelectItem value="SL">Sleeper (SL)</SelectItem>
+                            <SelectItem value="CC">Chair Car (CC)</SelectItem>
+                            <SelectItem value="2S">Second Seating (2S)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 <Button
-                  onClick={searchRoutes}
-                  disabled={isLoading || !from.trim() || !to.trim()}
+                  onClick={handleSearch}
+                  disabled={isLoading || (mode === 'flight' && (!from.trim() || !to.trim())) || (mode === 'train' && !trainNumber.trim() && (!from.trim() || !to.trim()))}
                   className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
                   size="lg"
                 >
                   {isLoading ? (
                     <>
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      Searching Available Routes...
+                      {mode === 'flight' ? 'Searching Real-Time Flights...' : 'Searching Trains...'}
                     </>
                   ) : (
                     <>
                       <Search className="w-5 h-5 mr-2" />
-                      Search Routes
+                      {mode === 'flight' ? 'Search Flights' : 'Search Trains'}
                     </>
                   )}
                 </Button>
@@ -321,91 +511,278 @@ function SearchRoutesContent() {
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="text-center space-y-4">
                 <Loader2 className="w-12 h-12 animate-spin text-indigo-600 mx-auto" />
-                <h2 className="text-2xl font-semibold text-gray-900">Searching Routes</h2>
-                <p className="text-gray-600">Finding available transport options for your journey...</p>
+                <h2 className="text-2xl font-semibold text-gray-900">
+                  {mode === 'flight' ? 'Searching Flights' : 'Searching Trains'}
+                </h2>
+                <p className="text-gray-600">
+                  {mode === 'flight' 
+                    ? 'Fetching real-time flight data from AviationStack API...'
+                    : 'Fetching live train data from IndianRailAPI...'}
+                </p>
               </div>
             </div>
           </section>
         )}
 
-        {/* Results Section */}
-        {searched && !isLoading && (
+        {/* Error Display */}
+        {error && !isLoading && (
+          <section className="py-6">
+            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-800">
+                <p className="font-medium">⚠️ {error}</p>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Results Section - Flights */}
+        {searched && !isLoading && mode === 'flight' && (
           <section className="py-12">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              {routes.length === 0 ? (
+              {flights.length === 0 ? (
                 <div className="text-center py-12">
-                  <div className="text-6xl mb-4">🔍</div>
-                  <h2 className="text-2xl font-semibold text-gray-900 mb-2">No Routes Found</h2>
+                  <div className="text-6xl mb-4">✈️</div>
+                  <h2 className="text-2xl font-semibold text-gray-900 mb-2">No Flights Found</h2>
                   <p className="text-gray-600 mb-6">
-                    We couldn't find any routes from {from} to {to}
-                    {mode && mode !== 'AUTO' && ` by ${mode}`}.
+                    We couldn't find any flights from {from} to {to}.
                   </p>
                   <p className="text-sm text-gray-500">
-                    Try searching for different cities or change the transport mode.
+                    Try searching for different cities or use airport IATA codes (e.g., COK for Kochi).
                   </p>
                 </div>
               ) : (
                 <>
                   <div className="text-center mb-8">
                     <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                      {routes.length} {routes.length === 1 ? 'Route' : 'Routes'} Found
+                      {flights.length} {flights.length === 1 ? 'Flight' : 'Flights'} Found
                     </h2>
                     <p className="text-gray-600">
-                      From {from} to {to}
-                      {mode && mode !== 'AUTO' && ` by ${mode}`}
+                      Showing results for {from} ↔ {to}
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    {routes.map((route) => (
-                      <Card key={route.id} className="hover:shadow-lg transition-all duration-300 border-2 hover:border-indigo-200">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {flights.map((flight, index) => (
+                      <Card key={index} className="hover:shadow-lg transition-all duration-300 border-2 hover:border-indigo-200">
                         <CardHeader className="pb-3">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
-                              {getModeIcon(route.mode)}
-                              <Badge variant="secondary" className="text-sm">
-                                {route.mode}
+                              <Plane className="w-5 h-5 text-indigo-600" />
+                              <Badge variant="secondary" className="text-sm font-semibold">
+                                {flight.flightIata}
                               </Badge>
                             </div>
-                            <Badge className="bg-green-600 hover:bg-green-700 text-white text-base font-semibold">
-                              {typeof route.price === 'number' 
-                                ? `₹${route.price.toLocaleString()}`
-                                : route.price}
+                            <Badge className={`${getStatusBadgeColor(flight.flightStatus)} hover:opacity-90 text-white text-xs font-semibold`}>
+                              {flight.flightStatus.toUpperCase()}
                             </Badge>
                           </div>
-                          <p className="text-sm font-medium text-gray-900">{route.from} → {route.to}</p>
+                          <p className="text-lg font-bold text-gray-900">{flight.airline}</p>
+                          <p className="text-sm text-gray-500">Flight #{flight.flightNumber}</p>
                         </CardHeader>
-                        <CardContent className="space-y-3">
-                          <div className="flex items-center gap-2 text-sm">
-                            <MapPin className="w-4 h-4 text-indigo-600" />
-                            <span className="font-medium text-gray-700">{route.from}</span>
-                            <span className="text-gray-400">→</span>
-                            <span className="font-medium text-gray-700">{route.to}</span>
-                          </div>
-
-                          <div className="grid grid-cols-1 gap-3 text-sm">
-                            <div className="flex items-center gap-2 bg-gray-50 p-2 rounded">
-                              <Clock className="w-4 h-4 text-gray-500" />
-                              <span className="text-gray-700">Duration: {route.duration}</span>
-                            </div>
-                          </div>
-
-                          {/* Amenities */}
-                          {route.amenities && route.amenities.length > 0 && (
-                            <div>
-                              <p className="text-xs font-medium text-gray-500 mb-2">Amenities:</p>
-                              <div className="flex flex-wrap gap-1">
-                                {route.amenities.map((amenity, idx) => (
-                                  <Badge key={idx} variant="outline" className="text-xs">
-                                    {amenity}
-                                  </Badge>
-                                ))}
+                        <CardContent className="space-y-4">
+                          {/* Departure Info */}
+                          <div className="bg-green-50 p-3 rounded-lg">
+                            <div className="flex items-start gap-2 mb-2">
+                              <MapPin className="w-4 h-4 text-green-600 mt-0.5" />
+                              <div className="flex-1">
+                                <p className="text-xs font-medium text-green-800 uppercase">Departure</p>
+                                <p className="text-sm font-semibold text-gray-900">{flight.departure.airport}</p>
+                                <p className="text-xs text-gray-600">IATA: {flight.departure.iata}</p>
                               </div>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <Clock className="w-4 h-4 text-green-600" />
+                              <span className="font-medium text-gray-900">
+                                {formatDateTime(flight.departure.estimatedTime)}
+                              </span>
+                            </div>
+                            {flight.departure.terminal && (
+                              <p className="text-xs text-gray-600 mt-1">
+                                Terminal: {flight.departure.terminal}
+                                {flight.departure.gate && ` • Gate: ${flight.departure.gate}`}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Arrival Info */}
+                          <div className="bg-blue-50 p-3 rounded-lg">
+                            <div className="flex items-start gap-2 mb-2">
+                              <MapPin className="w-4 h-4 text-blue-600 mt-0.5" />
+                              <div className="flex-1">
+                                <p className="text-xs font-medium text-blue-800 uppercase">Arrival</p>
+                                <p className="text-sm font-semibold text-gray-900">{flight.arrival.airport}</p>
+                                <p className="text-xs text-gray-600">IATA: {flight.arrival.iata}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <Clock className="w-4 h-4 text-blue-600" />
+                              <span className="font-medium text-gray-900">
+                                {formatDateTime(flight.arrival.estimatedTime)}
+                              </span>
+                            </div>
+                            {flight.arrival.terminal && (
+                              <p className="text-xs text-gray-600 mt-1">
+                                Terminal: {flight.arrival.terminal}
+                                {flight.arrival.gate && ` • Gate: ${flight.arrival.gate}`}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Flight Date */}
+                          {flight.flightDate && flight.flightDate !== 'N/A' && (
+                            <div className="flex items-center gap-2 text-sm bg-gray-50 p-2 rounded">
+                              <Calendar className="w-4 h-4 text-gray-500" />
+                              <span className="text-gray-700">Date: {flight.flightDate}</span>
+                            </div>
+                          )}
+
+                          {/* Aircraft Type */}
+                          {flight.aircraftType && (
+                            <div className="flex items-center gap-2 text-sm bg-gray-50 p-2 rounded">
+                              <Building className="w-4 h-4 text-gray-500" />
+                              <span className="text-gray-700">Aircraft: {flight.aircraftType}</span>
                             </div>
                           )}
 
                           <Button className="w-full mt-3 bg-indigo-600 hover:bg-indigo-700 text-white">
-                            Book Now
+                            View Details
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* Results Section - Trains */}
+        {searched && !isLoading && mode === 'train' && (
+          <section className="py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              {trains.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">🚂</div>
+                  <h2 className="text-2xl font-semibold text-gray-900 mb-2">No Trains Found</h2>
+                  <p className="text-gray-600 mb-6">
+                    We couldn't find train data for your search.
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Try different station codes or verify the train number.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="text-center mb-8">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                      {trains.length} {trains.length === 1 ? 'Train' : 'Trains'} Found
+                    </h2>
+                    <p className="text-gray-600">
+                      Live train information from IndianRailAPI
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {trains.map((train, index) => (
+                      <Card key={index} className="hover:shadow-lg transition-all duration-300 border-2 hover:border-indigo-200">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center gap-2">
+                              <TrainIcon className="w-5 h-5 text-indigo-600" />
+                              <Badge variant="secondary" className="text-sm font-semibold">
+                                {train.trainNumber}
+                              </Badge>
+                            </div>
+                            {train.currentStatus && (
+                              <Badge className={`${getStatusBadgeColor(train.currentStatus)} hover:opacity-90 text-white text-xs font-semibold`}>
+                                {train.currentStatus.toUpperCase()}
+                              </Badge>
+                            )}
+                          </div>
+                          <p className="text-lg font-bold text-gray-900">{train.trainName}</p>
+                          <p className="text-sm text-gray-500">{train.fromCode} → {train.toCode}</p>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                          {/* Source Station */}
+                          <div className="bg-green-50 p-3 rounded-lg">
+                            <div className="flex items-start gap-2 mb-2">
+                              <MapPin className="w-4 h-4 text-green-600 mt-0.5" />
+                              <div className="flex-1">
+                                <p className="text-xs font-medium text-green-800 uppercase">Source</p>
+                                <p className="text-sm font-semibold text-gray-900">{train.from}</p>
+                                <p className="text-xs text-gray-600">Code: {train.fromCode}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <Clock className="w-4 h-4 text-green-600" />
+                              <span className="font-medium text-gray-900">
+                                Departure: {train.departureTime}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Destination Station */}
+                          <div className="bg-blue-50 p-3 rounded-lg">
+                            <div className="flex items-start gap-2 mb-2">
+                              <MapPin className="w-4 h-4 text-blue-600 mt-0.5" />
+                              <div className="flex-1">
+                                <p className="text-xs font-medium text-blue-800 uppercase">Destination</p>
+                                <p className="text-sm font-semibold text-gray-900">{train.to}</p>
+                                <p className="text-xs text-gray-600">Code: {train.toCode}</p>
+                              </div>
+                            </div>
+                            <div className="flex items-center gap-2 text-sm">
+                              <Clock className="w-4 h-4 text-blue-600" />
+                              <span className="font-medium text-gray-900">
+                                Arrival: {train.arrivalTime}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Live Status Info */}
+                          {train.type === 'live-status' && (
+                            <>
+                              {train.currentLocation && (
+                                <div className="flex items-center gap-2 text-sm bg-yellow-50 p-2 rounded border border-yellow-200">
+                                  <Info className="w-4 h-4 text-yellow-600" />
+                                  <span className="text-gray-700">Currently at: {train.currentLocation}</span>
+                                </div>
+                              )}
+                              {train.delay && train.delay !== '0 min' && (
+                                <div className="flex items-center gap-2 text-sm bg-red-50 p-2 rounded border border-red-200">
+                                  <Clock className="w-4 h-4 text-red-600" />
+                                  <span className="text-gray-700">Delay: {train.delay}</span>
+                                </div>
+                              )}
+                            </>
+                          )}
+
+                          {/* Seat Availability Info */}
+                          {train.type === 'seat-availability' && (
+                            <>
+                              {train.travelClass && (
+                                <div className="flex items-center gap-2 text-sm bg-gray-50 p-2 rounded">
+                                  <Badge variant="outline">{train.travelClass}</Badge>
+                                  <span className="text-gray-700">Class</span>
+                                </div>
+                              )}
+                              {train.fare && train.fare !== 'N/A' && (
+                                <div className="flex items-center gap-2 text-sm bg-green-50 p-2 rounded">
+                                  <span className="font-semibold text-green-700">Fare: ₹{train.fare}</span>
+                                </div>
+                              )}
+                              {train.duration && train.duration !== 'N/A' && (
+                                <div className="flex items-center gap-2 text-sm bg-gray-50 p-2 rounded">
+                                  <Clock className="w-4 h-4 text-gray-500" />
+                                  <span className="text-gray-700">Duration: {train.duration}</span>
+                                </div>
+                              )}
+                            </>
+                          )}
+
+                          <Button className="w-full mt-3 bg-indigo-600 hover:bg-indigo-700 text-white">
+                            View Details
                           </Button>
                         </CardContent>
                       </Card>
@@ -423,12 +800,24 @@ function SearchRoutesContent() {
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
               <div className="bg-indigo-50 border border-indigo-200 rounded-lg p-6">
                 <h3 className="font-semibold text-indigo-900 mb-3">💡 Search Tips:</h3>
-                <ul className="space-y-2 text-sm text-indigo-800">
-                  <li>• Enter city names (e.g., "Kochi", "Mumbai", "Bangalore")</li>
-                  <li>• Select a specific transport mode or search across all modes</li>
-                  <li>• Results are sorted by price (lowest first)</li>
-                  <li>• Try nearby cities if no direct routes are available</li>
-                </ul>
+                {mode === 'flight' ? (
+                  <ul className="space-y-2 text-sm text-indigo-800">
+                    <li>• Enter city names (e.g., "Kochi", "Mumbai", "Dubai") or IATA codes (e.g., "COK", "BOM", "DXB")</li>
+                    <li>• Results show real-time flight data from AviationStack API</li>
+                    <li>• Search includes flights in both directions automatically</li>
+                    <li>• Flight status: Active, Scheduled, Landed, Delayed, or Cancelled</li>
+                    <li>• Major cities and international airports are supported</li>
+                  </ul>
+                ) : (
+                  <ul className="space-y-2 text-sm text-indigo-800">
+                    <li>• Enter train number to get live running status (e.g., "12626" for Kerala Express)</li>
+                    <li>• Or enter source and destination cities/station codes for seat availability</li>
+                    <li>• Supported cities: Delhi (NDLS), Mumbai (CSTM), Bangalore (SBC), Chennai (MAS), Kochi (ERS), etc.</li>
+                    <li>• Results show live train status, current location, delay information, and seat availability</li>
+                    <li>• Select your preferred travel class (1A, 2A, 3A, SL, CC, 2S)</li>
+                    <li>• Data powered by IndianRailAPI</li>
+                  </ul>
+                )}
               </div>
             </div>
           </section>
