@@ -1,0 +1,380 @@
+[
+  {
+    "from": "Goa",
+    "to": "Delhi",
+    "mode": "Bus",
+    "duration": "28h 15m",
+    "cost": "₹1800",
+    "operator": "VRL Travels",
+    "departureTime": "19:00",
+    "arrivalTime": "23:15",
+    "busType": "AC Sleeper"
+  },
+  {
+    "from": "Goa",
+    "to": "Delhi",
+    "mode": "Car",
+    "duration": "24h 00m",
+    "cost": "₹6200",
+    "vehicle": "Sedan",
+    "fuelCost": "₹4500",
+    "tollCost": "₹1700"
+  },
+  {
+    "from": "Delhi",
+    "to": "Goa",
+    "mode": "Bus",
+    "duration": "28h 30m",
+    "cost": "₹1850",
+    "operator": "VRL Travels",
+    "departureTime": "18:30",
+    "arrivalTime": "23:00",
+    "busType": "AC Sleeper"
+  },
+  {
+    "from": "Delhi",
+    "to": "Goa",
+    "mode": "Car",
+    "duration": "24h 15m",
+    "cost": "₹6300",
+    "vehicle": "Sedan",
+    "fuelCost": "₹4600",
+    "tollCost": "₹1700"
+  },
+  {
+    "from": "Chennai",
+    "to": "Kolkata",
+    "mode": "Bus",
+    "duration": "30h 45m",
+    "cost": "₹2100",
+    "operator": "GreenLine Travels",
+    "departureTime": "17:00",
+    "arrivalTime": "23:45",
+    "busType": "AC Sleeper"
+  },
+  {
+    "from": "Chennai",
+    "to": "Kolkata",
+    "mode": "Car",
+    "duration": "26h 30m",
+    "cost": "₹7800",
+    "vehicle": "SUV",
+    "fuelCost": "₹5500",
+    "tollCost": "₹2300"
+  },
+  {
+    "from": "Kolkata",
+    "to": "Chennai",
+    "mode": "Bus",
+    "duration": "31h 00m",
+    "cost": "₹2150",
+    "operator": "GreenLine Travels",
+    "departureTime": "16:30",
+    "arrivalTime": "23:30",
+    "busType": "AC Sleeper"
+  },
+  {
+    "from": "Kolkata",
+    "to": "Chennai",
+    "mode": "Car",
+    "duration": "26h 45m",
+    "cost": "₹7900",
+    "vehicle": "SUV",
+    "fuelCost": "₹5600",
+    "tollCost": "₹2300"
+  },
+  {
+    "from": "Bengaluru",
+    "to": "Jaipur",
+    "mode": "Bus",
+    "duration": "24h 20m",
+    "cost": "₹1950",
+    "operator": "SRS Travels",
+    "departureTime": "20:00",
+    "arrivalTime": "20:20",
+    "busType": "AC Sleeper"
+  },
+  {
+    "from": "Bengaluru",
+    "to": "Jaipur",
+    "mode": "Car",
+    "duration": "21h 10m",
+    "cost": "₹7500",
+    "vehicle": "SUV",
+    "fuelCost": "₹5200",
+    "tollCost": "₹2300"
+  },
+  {
+    "from": "Jaipur",
+    "to": "Bengaluru",
+    "mode": "Bus",
+    "duration": "24h 35m",
+    "cost": "₹2000",
+    "operator": "SRS Travels",
+    "departureTime": "19:30",
+    "arrivalTime": "20:05",
+    "busType": "AC Sleeper"
+  },
+  {
+    "from": "Jaipur",
+    "to": "Bengaluru",
+    "mode": "Car",
+    "duration": "21h 25m",
+    "cost": "₹7600",
+    "vehicle": "SUV",
+    "fuelCost": "₹5300",
+    "tollCost": "₹2300"
+  },
+  {
+    "from": "Delhi",
+    "to": "Chennai",
+    "mode": "Bus",
+    "duration": "32h 00m",
+    "cost": "₹2300",
+    "operator": "National Travels",
+    "departureTime": "18:00",
+    "arrivalTime": "02:00",
+    "busType": "AC Sleeper"
+  },
+  {
+    "from": "Delhi",
+    "to": "Chennai",
+    "mode": "Car",
+    "duration": "28h 30m",
+    "cost": "₹8200",
+    "vehicle": "Sedan",
+    "fuelCost": "₹5800",
+    "tollCost": "₹2400"
+  },
+  {
+    "from": "Chennai",
+    "to": "Delhi",
+    "mode": "Bus",
+    "duration": "32h 15m",
+    "cost": "₹2350",
+    "operator": "National Travels",
+    "departureTime": "17:30",
+    "arrivalTime": "01:45",
+    "busType": "AC Sleeper"
+  },
+  {
+    "from": "Chennai",
+    "to": "Delhi",
+    "mode": "Car",
+    "duration": "28h 45m",
+    "cost": "₹8300",
+    "vehicle": "Sedan",
+    "fuelCost": "₹5900",
+    "tollCost": "₹2400"
+  },
+  {
+    "from": "Goa",
+    "to": "Bengaluru",
+    "mode": "Bus",
+    "duration": "12h 30m",
+    "cost": "₹950",
+    "operator": "Paulo Travels",
+    "departureTime": "21:00",
+    "arrivalTime": "09:30",
+    "busType": "AC Sleeper"
+  },
+  {
+    "from": "Goa",
+    "to": "Bengaluru",
+    "mode": "Car",
+    "duration": "10h 45m",
+    "cost": "₹3200",
+    "vehicle": "Sedan",
+    "fuelCost": "₹2300",
+    "tollCost": "₹900"
+  },
+  {
+    "from": "Bengaluru",
+    "to": "Goa",
+    "mode": "Bus",
+    "duration": "12h 45m",
+    "cost": "₹980",
+    "operator": "Paulo Travels",
+    "departureTime": "20:30",
+    "arrivalTime": "09:15",
+    "busType": "AC Sleeper"
+  },
+  {
+    "from": "Bengaluru",
+    "to": "Goa",
+    "mode": "Car",
+    "duration": "11h 00m",
+    "cost": "₹3300",
+    "vehicle": "Sedan",
+    "fuelCost": "₹2400",
+    "tollCost": "₹900"
+  },
+  {
+    "from": "Delhi",
+    "to": "Jaipur",
+    "mode": "Bus",
+    "duration": "6h 15m",
+    "cost": "₹450",
+    "operator": "Rajasthan Roadways",
+    "departureTime": "06:00",
+    "arrivalTime": "12:15",
+    "busType": "AC Seater"
+  },
+  {
+    "from": "Delhi",
+    "to": "Jaipur",
+    "mode": "Car",
+    "duration": "5h 30m",
+    "cost": "₹1800",
+    "vehicle": "Sedan",
+    "fuelCost": "₹1200",
+    "tollCost": "₹600"
+  },
+  {
+    "from": "Jaipur",
+    "to": "Delhi",
+    "mode": "Bus",
+    "duration": "6h 20m",
+    "cost": "₹460",
+    "operator": "Rajasthan Roadways",
+    "departureTime": "07:00",
+    "arrivalTime": "13:20",
+    "busType": "AC Seater"
+  },
+  {
+    "from": "Jaipur",
+    "to": "Delhi",
+    "mode": "Car",
+    "duration": "5h 35m",
+    "cost": "₹1850",
+    "vehicle": "Sedan",
+    "fuelCost": "₹1250",
+    "tollCost": "₹600"
+  },
+  {
+    "from": "Kolkata",
+    "to": "Bengaluru",
+    "mode": "Bus",
+    "duration": "30h 00m",
+    "cost": "₹2200",
+    "operator": "Royal Cruiser",
+    "departureTime": "16:00",
+    "arrivalTime": "22:00",
+    "busType": "AC Sleeper"
+  },
+  {
+    "from": "Kolkata",
+    "to": "Bengaluru",
+    "mode": "Car",
+    "duration": "26h 15m",
+    "cost": "₹7700",
+    "vehicle": "SUV",
+    "fuelCost": "₹5400",
+    "tollCost": "₹2300"
+  },
+  {
+    "from": "Bengaluru",
+    "to": "Kolkata",
+    "mode": "Bus",
+    "duration": "30h 15m",
+    "cost": "₹2250",
+    "operator": "Royal Cruiser",
+    "departureTime": "15:30",
+    "arrivalTime": "21:45",
+    "busType": "AC Sleeper"
+  },
+  {
+    "from": "Bengaluru",
+    "to": "Kolkata",
+    "mode": "Car",
+    "duration": "26h 30m",
+    "cost": "₹7800",
+    "vehicle": "SUV",
+    "fuelCost": "₹5500",
+    "tollCost": "₹2300"
+  },
+  {
+    "from": "Chennai",
+    "to": "Bengaluru",
+    "mode": "Bus",
+    "duration": "7h 30m",
+    "cost": "₹650",
+    "operator": "KPN Travels",
+    "departureTime": "22:00",
+    "arrivalTime": "05:30",
+    "busType": "AC Sleeper"
+  },
+  {
+    "from": "Chennai",
+    "to": "Bengaluru",
+    "mode": "Car",
+    "duration": "6h 15m",
+    "cost": "₹2400",
+    "vehicle": "Sedan",
+    "fuelCost": "₹1700",
+    "tollCost": "₹700"
+  },
+  {
+    "from": "Bengaluru",
+    "to": "Chennai",
+    "mode": "Bus",
+    "duration": "7h 45m",
+    "cost": "₹680",
+    "operator": "KPN Travels",
+    "departureTime": "21:30",
+    "arrivalTime": "05:15",
+    "busType": "AC Sleeper"
+  },
+  {
+    "from": "Bengaluru",
+    "to": "Chennai",
+    "mode": "Car",
+    "duration": "6h 30m",
+    "cost": "₹2500",
+    "vehicle": "Sedan",
+    "fuelCost": "₹1800",
+    "tollCost": "₹700"
+  },
+  {
+    "from": "Goa",
+    "to": "Chennai",
+    "mode": "Bus",
+    "duration": "14h 20m",
+    "cost": "₹1200",
+    "operator": "Kallada Travels",
+    "departureTime": "19:00",
+    "arrivalTime": "09:20",
+    "busType": "AC Sleeper"
+  },
+  {
+    "from": "Goa",
+    "to": "Chennai",
+    "mode": "Car",
+    "duration": "12h 30m",
+    "cost": "₹4200",
+    "vehicle": "Sedan",
+    "fuelCost": "₹3000",
+    "tollCost": "₹1200"
+  },
+  {
+    "from": "Chennai",
+    "to": "Goa",
+    "mode": "Bus",
+    "duration": "14h 35m",
+    "cost": "₹1250",
+    "operator": "Kallada Travels",
+    "departureTime": "18:30",
+    "arrivalTime": "09:05",
+    "busType": "AC Sleeper"
+  },
+  {
+    "from": "Chennai",
+    "to": "Goa",
+    "mode": "Car",
+    "duration": "12h 45m",
+    "cost": "₹4300",
+    "vehicle": "Sedan",
+    "fuelCost": "₹3100",
+    "tollCost": "₹1200"
+  }
+]

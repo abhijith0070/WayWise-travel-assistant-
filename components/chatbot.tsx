@@ -108,39 +108,40 @@ export function Chatbot() {
     setIsTyping(true)
 
     try {
-      // Call Gemini API
-      const response = await fetch("/api/chat", {
+      const res = await fetch("/api/groq", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: currentInput }),
-      })
+        body: JSON.stringify({ 
+          message: currentInput,
+          role: "chat"
+        }),
+      });
 
-      const data = await response.json()
-
-      if (response.ok && data.reply) {
+      if (!res.ok) {
+        console.error("Chat API failed:", await res.text());
         const botResponse: Message = {
           id: (Date.now() + 1).toString(),
-          text: data.reply,
+          text: "❌ Failed to get AI response. Please try again.",
           sender: "bot",
           timestamp: new Date(),
         }
         setMessages((prev) => [...prev, botResponse])
-      } else {
-        // Fallback to predefined response if API fails
-        const botResponse: Message = {
-          id: (Date.now() + 1).toString(),
-          text: "I'm having trouble connecting right now. Please try again or use our AI Trip Planner for detailed assistance.",
-          sender: "bot",
-          timestamp: new Date(),
-        }
-        setMessages((prev) => [...prev, botResponse])
+        return;
       }
-    } catch (error) {
-      console.error("Chat error:", error)
-      // Fallback to predefined response
+
+      const data = await res.json();
       const botResponse: Message = {
         id: (Date.now() + 1).toString(),
-        text: generateBotResponse(currentInput),
+        text: data.reply || "No response received.",
+        sender: "bot",
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, botResponse])
+    } catch (err) {
+      console.error("Chat error:", err);
+      const botResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "⚠️ Connection error. Please check your internet connection.",
         sender: "bot",
         timestamp: new Date(),
       }
@@ -183,7 +184,7 @@ export function Chatbot() {
               </div>
               <div>
                 <CardTitle className="text-base font-semibold">Sundaran AI</CardTitle>
-                <p className="text-xs text-orange-100">Online • Ready to help</p>
+                <p className="text-xs text-orange-100">Powered by Groq • Ready to help</p>
               </div>
             </div>
             <div className="flex items-center space-x-1">

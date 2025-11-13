@@ -1,203 +1,94 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || '',
-});
+const OLLAMA_API_URL = "http://localhost:11434/api/generate";
+
+// Increase timeout for serverless functions
+export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
-  let prompt: string = '';
-  
   try {
-    const requestBody = await request.json();
-    prompt = requestBody.prompt;
+    const { prompt } = await request.json();
 
     // Validate input
     if (!prompt || typeof prompt !== 'string') {
       return NextResponse.json(
-        { error: 'Invalid prompt. Please provide a valid travel query.' },
+        { success: false, error: 'Missing prompt' },
         { status: 400 }
       );
     }
 
-    // Try Ollama first (free and unlimited)
-    try {
-      console.log('Attempting Ollama API first...');
-      
-      const ollamaResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/plan-trip-ollama`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt }),
-      });
+    // Optimized prompt for faster responses
+    const enhancedPrompt = `You are a travel planner AI. Create a concise trip itinerary:
 
-      if (ollamaResponse.ok) {
-        const ollamaData = await ollamaResponse.json();
-        console.log('Successfully used Ollama API');
-        return NextResponse.json({
-          ...ollamaData,
-          source: 'ollama-llama2'
-        });
-      } else {
-        console.log('Ollama failed, trying mock AI for demo...');
-      }
-    } catch (ollamaError) {
-      console.error('Ollama API failed:', ollamaError);
-      console.log('Trying mock AI for demo...');
-    }
+${prompt}
 
-    // Try Mock AI (for demo while setting up Ollama)
-    try {
-      const mockResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/plan-trip-mock`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt }),
-      });
+Include:
+1. Day-by-day plan with key activities
+2. Budget estimate (₹)
+3. Top 3 attractions
+4. Travel tips
 
-      if (mockResponse.ok) {
-        const mockData = await mockResponse.json();
-        console.log('Successfully used Mock AI (demo mode)');
-        return NextResponse.json({
-          ...mockData,
-          source: 'mock-ai-demo'
-        });
-      }
-    } catch (mockError) {
-      console.error('Mock AI failed:', mockError);
-      console.log('Falling back to OpenAI...');
-    }
+Be brief and structured. Max 500 words.`;
 
-    // Fallback to OpenAI if Ollama fails
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { error: 'No AI service available. Install Ollama or configure OpenAI API key.' },
-        { status: 500 }
-      );
-    }
+    console.log('🚀 Starting trip generation with gemma3:1b model...');
 
-    // Create structured prompt for AI
-    const systemPrompt = `You are WayWise AI, an expert travel planner. Generate detailed, personalized travel itineraries based on user requests.
-
-Your response MUST be a valid JSON object with this exact structure:
-{
-  "title": "Short descriptive trip title",
-  "description": "Brief 2-3 sentence trip overview",
-  "destination": "Primary destination city/region",
-  "from": "Starting location",
-  "duration": "Number of days (e.g., '3 days')",
-  "estimatedBudget": "Total estimated cost in ₹",
-  "bestFor": "Who this trip is best for (Solo/Couple/Family/Friends)",
-  "season": "Best time to visit (e.g., 'October-March')",
-  "itinerary": [
-    {
-      "day": 1,
-      "title": "Day title",
-      "description": "Brief day overview (optional)",
-      "activities": [
-        {
-          "time": "09:00 AM",
-          "activity": "Activity name", 
-          "description": "Detailed activity description",
-          "location": "Specific location name",
-          "estimatedCost": "₹500"
+    // Call Ollama API with non-streaming mode for stability
+    const ollamaResponse = await fetch(OLLAMA_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "gemma3:1b",
+        prompt: enhancedPrompt,
+        stream: false,
+        keep_alive: "10m",
+        options: {
+          num_predict: 700,
+          temperature: 0.6
         }
-      ]
-    }
-  ],
-  "tips": ["Travel tip 1", "Travel tip 2", "Cultural insight", ...]
-}
-
-Be specific with Indian currency (₹), provide realistic costs, and include cultural insights.`;
-
-    // Call OpenAI API
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.7,
-      max_tokens: 3000,
-      response_format: { type: 'json_object' }
+      }),
     });
 
-    const aiResponse = completion.choices[0]?.message?.content;
-
-    if (!aiResponse) {
-      throw new Error('No response from AI');
+    if (!ollamaResponse.ok) {
+      throw new Error(`Ollama API failed with ${ollamaResponse.status}`);
     }
 
-    // Parse and validate JSON response
-    const tripPlan = JSON.parse(aiResponse);
+    const data = await ollamaResponse.json();
+    
+    // Extract the response text from Ollama
+    const tripPlan = data.response;
+    
+    if (!tripPlan) {
+      throw new Error('No response from Ollama model');
+    }
 
-    // Return formatted response
+    console.log('✅ Trip plan generated successfully. Length:', tripPlan.length);
+
+    // Return complete trip plan as JSON
     return NextResponse.json({
       success: true,
-      tripPlan: tripPlan,
-      timestamp: new Date().toISOString(),
-      source: 'openai-gpt3.5'
+      data: tripPlan,
+      plan: tripPlan
     });
 
   } catch (error: any) {
-    console.error('OpenAI Trip Planning Error:', error);
-
-    // Handle specific errors
-    if (error.code === 'insufficient_quota' || error.status === 429) {
-      // Try fallback to Gemini API
-      try {
-        console.log('Attempting fallback to Gemini API...');
-        
-        const fallbackResponse = await fetch(`${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/api/plan-trip-gemini`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ prompt }),
-        });
-
-        if (fallbackResponse.ok) {
-          const fallbackData = await fallbackResponse.json();
-          console.log('Successfully used Gemini fallback');
-          return NextResponse.json({
-            ...fallbackData,
-            source: 'gemini-fallback'
-          });
-        }
-      } catch (fallbackError) {
-        console.error('Gemini fallback also failed:', fallbackError);
-      }
-
+    console.error('Trip Plan API error:', error);
+    
+    if (error.code === 'ECONNREFUSED' || error.message.includes('fetch failed')) {
       return NextResponse.json(
         { 
-          error: 'API quota exceeded. Please try again later.',
-          details: 'Both AI services are temporarily unavailable. Please try again in a few minutes.' 
+          success: false,
+          error: 'Cannot connect to Ollama. Make sure Ollama is running: "ollama serve"'
         },
-        { status: 429 }
+        { status: 503 }
       );
     }
-
+    
     return NextResponse.json(
       { 
-        error: 'Failed to generate trip plan. Please try again.',
-        details: error.message 
+        success: false, 
+        error: error.message || 'Ollama API failed. Check if Ollama is running.'
       },
       { status: 500 }
     );
   }
-}
-
-// Enable CORS for frontend
-export async function OPTIONS(request: NextRequest) {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
 }

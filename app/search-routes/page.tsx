@@ -10,12 +10,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2, Search, MapPin, Clock, Plane, Train as TrainIcon, ArrowLeft, Calendar, Building, Info } from "lucide-react"
+import { Loader2, Search, MapPin, Clock, Plane, Train as TrainIcon, Bus as BusIcon, Car as CarIcon, ArrowLeft, Calendar, Building, Info } from "lucide-react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { toIataCode } from "@/lib/airportMapping"
 import { toStationCode } from "@/lib/stationMapping"
+import manualRoutesData from "@/data/manualRoutes.json"
 
-type SearchMode = "flight" | "train"
+type SearchMode = "flight" | "train" | "bus" | "car"
 
 interface Flight {
   airline: string
@@ -36,7 +37,6 @@ interface Flight {
     airport: string
     iata: string
     timezone: string
-    scheduledTime: string
     estimatedTime: string
     actualTime: string | null
     terminal: string | null
@@ -68,6 +68,21 @@ interface Train {
   duration?: string
   date: string
   type: "live-status" | "seat-availability"
+}
+
+interface ManualRoute {
+  from: string
+  to: string
+  mode: "Bus" | "Car"
+  duration: string
+  cost: string
+  operator?: string
+  vehicle?: string
+  departureTime?: string
+  arrivalTime?: string
+  busType?: string
+  fuelCost?: string
+  tollCost?: string
 }
 
 const getStatusBadgeColor = (status: string) => {
@@ -105,6 +120,7 @@ function SearchRoutesContent() {
   const [isLoading, setIsLoading] = useState(false)
   const [flights, setFlights] = useState<Flight[]>([])
   const [trains, setTrains] = useState<Train[]>([])
+  const [manualRoutes, setManualRoutes] = useState<ManualRoute[]>([])
   const [error, setError] = useState<string | null>(null)
   const [searched, setSearched] = useState(false)
   const lastSearchRef = useRef<string>("")
@@ -118,7 +134,7 @@ function SearchRoutesContent() {
     // Set form values from URL params
     if (fromParam) setFrom(fromParam)
     if (toParam) setTo(toParam)
-    if (modeParam && (modeParam === 'flight' || modeParam === 'train')) {
+    if (modeParam && (modeParam === 'flight' || modeParam === 'train' || modeParam === 'bus' || modeParam === 'car')) {
       setMode(modeParam)
     }
     
@@ -132,6 +148,8 @@ function SearchRoutesContent() {
       // Trigger search with params directly
       if (modeParam === 'train') {
         fetchTrains(fromParam, toParam)
+      } else if (modeParam === 'bus' || modeParam === 'car') {
+        fetchManualRoutes(fromParam, toParam, modeParam)
       } else {
         fetchFlights(fromParam, toParam)
       }
@@ -278,14 +296,64 @@ function SearchRoutesContent() {
     }
   }
 
+  const fetchManualRoutes = async (fromCity?: string, toCity?: string, searchMode?: SearchMode) => {
+    const searchFrom = fromCity || from
+    const searchTo = toCity || to
+    const currentMode = searchMode || mode
+    
+    if (!searchFrom.trim() || !searchTo.trim()) {
+      setError("Please enter both source and destination cities")
+      return
+    }
+
+    setIsLoading(true)
+    setError(null)
+    setManualRoutes([])
+    setSearched(false)
+
+    try {
+      const modeLabel = currentMode === 'bus' ? 'Bus' : 'Car'
+      console.log(`🚌 Searching ${modeLabel} routes: ${searchFrom} → ${searchTo}`)
+
+      // Filter routes from JSON data
+      const routes = manualRoutesData.filter((route) => {
+        const fromMatch = route.from.toLowerCase() === searchFrom.trim().toLowerCase()
+        const toMatch = route.to.toLowerCase() === searchTo.trim().toLowerCase()
+        const modeMatch = route.mode.toLowerCase() === modeLabel.toLowerCase()
+        
+        return fromMatch && toMatch && modeMatch
+      })
+
+      if (routes.length > 0) {
+        console.log(`✅ Found ${routes.length} ${modeLabel} route(s)`)
+        setManualRoutes(routes as ManualRoute[])
+        setSearched(true)
+        setError(null)
+      } else {
+        setError(`No ${modeLabel.toLowerCase()} routes found between ${searchFrom} and ${searchTo}. Try: Goa, Delhi, Chennai, Kolkata, Bengaluru, or Jaipur.`)
+        setManualRoutes([])
+        setSearched(true)
+      }
+    } catch (err) {
+      console.error(`❌ ${mode} search error:`, err)
+      setError(`Failed to search ${mode} routes. Please try again.`)
+      setManualRoutes([])
+      setSearched(true)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
   // Unified search handler
   const handleSearch = () => {
     // Reset last search key to allow manual re-search
     lastSearchRef.current = ""
     if (mode === 'flight') {
       fetchFlights()
-    } else {
+    } else if (mode === 'train') {
       fetchTrains()
+    } else if (mode === 'bus' || mode === 'car') {
+      fetchManualRoutes()
     }
   }
 
@@ -301,6 +369,8 @@ function SearchRoutesContent() {
       if (mode === 'flight' && from.trim() && to.trim()) {
         handleSearch()
       } else if (mode === 'train' && (trainNumber.trim() || (from.trim() && to.trim()))) {
+        handleSearch()
+      } else if ((mode === 'bus' || mode === 'car') && from.trim() && to.trim()) {
         handleSearch()
       }
     }
@@ -325,17 +395,27 @@ function SearchRoutesContent() {
               <div className="w-16 h-16 bg-white/20 rounded-full flex items-center justify-center mx-auto mb-4">
                 {mode === 'flight' ? (
                   <Plane className="w-8 h-8 text-white" />
-                ) : (
+                ) : mode === 'train' ? (
                   <TrainIcon className="w-8 h-8 text-white" />
+                ) : mode === 'bus' ? (
+                  <BusIcon className="w-8 h-8 text-white" />
+                ) : (
+                  <CarIcon className="w-8 h-8 text-white" />
                 )}
               </div>
               <h1 className="text-4xl font-serif font-bold mb-4">
-                {mode === 'flight' ? 'Search Real-Time Flights' : 'Search Indian Trains'}
+                {mode === 'flight' ? 'Search Real-Time Flights' : 
+                 mode === 'train' ? 'Search Indian Trains' :
+                 mode === 'bus' ? 'Search Bus Routes' : 'Search Car Routes'}
               </h1>
               <p className="text-lg text-white/90 max-w-2xl mx-auto">
                 {mode === 'flight' 
                   ? 'Find live flight information powered by AviationStack API'
-                  : 'Find live train status and seat availability powered by IndianRailAPI'}
+                  : mode === 'train'
+                  ? 'Find live train status and seat availability powered by IndianRailAPI'
+                  : mode === 'bus'
+                  ? 'Find bus routes between major Indian cities'
+                  : 'Find car travel routes and costs between cities'}
               </p>
             </div>
           </div>
@@ -348,7 +428,9 @@ function SearchRoutesContent() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Search className="w-5 h-5 text-indigo-600" />
-                  {mode === 'flight' ? 'Search Flights' : 'Search Trains'}
+                  {mode === 'flight' ? 'Search Flights' : 
+                   mode === 'train' ? 'Search Trains' :
+                   mode === 'bus' ? 'Search Bus Routes' : 'Search Car Routes'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -361,6 +443,7 @@ function SearchRoutesContent() {
                     setSearched(false)
                     setFlights([])
                     setTrains([])
+                    setManualRoutes([])
                   }}>
                     <SelectTrigger id="mode" className="text-base">
                       <SelectValue placeholder="Select mode" />
@@ -369,13 +452,25 @@ function SearchRoutesContent() {
                       <SelectItem value="flight">
                         <div className="flex items-center gap-2">
                           <Plane className="w-4 h-4" />
-                          <span>Flight</span>
+                          <span>Flight (Live API)</span>
                         </div>
                       </SelectItem>
                       <SelectItem value="train">
                         <div className="flex items-center gap-2">
                           <TrainIcon className="w-4 h-4" />
-                          <span>Train</span>
+                          <span>Train (Live API)</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="bus">
+                        <div className="flex items-center gap-2">
+                          <BusIcon className="w-4 h-4" />
+                          <span>Bus (Offline)</span>
+                        </div>
+                      </SelectItem>
+                      <SelectItem value="car">
+                        <div className="flex items-center gap-2">
+                          <CarIcon className="w-4 h-4" />
+                          <span>Car (Offline)</span>
                         </div>
                       </SelectItem>
                     </SelectContent>
@@ -474,21 +569,48 @@ function SearchRoutesContent() {
                   </>
                 )}
 
+                {(mode === 'bus' || mode === 'car') && (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="bus-from">From City</Label>
+                        <Input
+                          id="bus-from"
+                          placeholder="e.g., Goa, Delhi, Chennai"
+                          value={from}
+                          onChange={(e) => setFrom(e.target.value)}
+                          className="w-full"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="bus-to">To City</Label>
+                        <Input
+                          id="bus-to"
+                          placeholder="e.g., Delhi, Bengaluru, Kolkata"
+                          value={to}
+                          onChange={(e) => setTo(e.target.value)}
+                          className="w-full"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 <Button
                   onClick={handleSearch}
-                  disabled={isLoading || (mode === 'flight' && (!from.trim() || !to.trim())) || (mode === 'train' && !trainNumber.trim() && (!from.trim() || !to.trim()))}
+                  disabled={isLoading || (mode === 'flight' && (!from.trim() || !to.trim())) || (mode === 'train' && !trainNumber.trim() && (!from.trim() || !to.trim())) || ((mode === 'bus' || mode === 'car') && (!from.trim() || !to.trim()))}
                   className="w-full bg-indigo-600 hover:bg-indigo-700 text-white"
                   size="lg"
                 >
                   {isLoading ? (
                     <>
                       <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                      {mode === 'flight' ? 'Searching Real-Time Flights...' : 'Searching Trains...'}
+                      {mode === 'flight' ? 'Searching Real-Time Flights...' : mode === 'train' ? 'Searching Trains...' : mode === 'bus' ? 'Searching Bus Routes...' : 'Searching Car Routes...'}
                     </>
                   ) : (
                     <>
                       <Search className="w-5 h-5 mr-2" />
-                      {mode === 'flight' ? 'Search Flights' : 'Search Trains'}
+                      {mode === 'flight' ? 'Search Flights' : mode === 'train' ? 'Search Trains' : mode === 'bus' ? 'Search Bus Routes' : 'Search Car Routes'}
                     </>
                   )}
                 </Button>
@@ -780,6 +902,133 @@ function SearchRoutesContent() {
                               )}
                             </>
                           )}
+
+                          <Button className="w-full mt-3 bg-indigo-600 hover:bg-indigo-700 text-white">
+                            View Details
+                          </Button>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </section>
+        )}
+
+        {/* Results Section - Bus/Car Routes */}
+        {searched && !isLoading && (mode === 'bus' || mode === 'car') && (
+          <section className="py-12">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              {manualRoutes.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="text-6xl mb-4">{mode === 'bus' ? '🚌' : '🚗'}</div>
+                  <h2 className="text-2xl font-semibold text-gray-900 mb-2">No {mode === 'bus' ? 'Bus' : 'Car'} Routes Found</h2>
+                  <p className="text-gray-600 mb-6">
+                    We couldn't find any {mode} routes from {from} to {to}.
+                  </p>
+                  <p className="text-sm text-gray-500">
+                    Try: Goa, Delhi, Chennai, Kolkata, Bengaluru, or Jaipur
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="text-center mb-8">
+                    <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                      {mode === 'bus' ? '🚌' : '🚗'} {manualRoutes.length} {mode === 'bus' ? 'Bus' : 'Car'} {manualRoutes.length === 1 ? 'Route' : 'Routes'} Found
+                    </h2>
+                    <p className="text-gray-600">
+                      Showing results for {from} → {to}
+                    </p>
+                  </div>
+
+                  <div className="grid gap-6">
+                    {manualRoutes.map((route, index) => (
+                      <Card key={index} className="border-2 border-indigo-100 hover:border-indigo-300 hover:shadow-lg transition-all duration-200">
+                        <CardContent className="p-6">
+                          {/* Route Header */}
+                          <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200">
+                            <div className="flex items-center gap-3">
+                              <Badge className="bg-indigo-600 text-white px-3 py-1 text-sm">
+                                {route.mode.toUpperCase()}
+                              </Badge>
+                              <h3 className="text-xl font-bold text-gray-900">
+                                {route.from} → {route.to}
+                              </h3>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-2xl font-bold text-indigo-600">₹{route.cost}</p>
+                              <p className="text-xs text-gray-500">Total Cost</p>
+                            </div>
+                          </div>
+
+                          {/* Route Details Grid */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                            {/* Origin */}
+                            <div className="flex items-start gap-2">
+                              <MapPin className="w-4 h-4 text-green-600 mt-0.5" />
+                              <div className="flex-1">
+                                <p className="text-xs font-medium text-green-800 uppercase">Origin</p>
+                                <p className="text-sm font-semibold text-gray-900">{route.from}</p>
+                                {mode === 'bus' && route.departureTime && (
+                                  <p className="text-xs text-gray-600">Departure: {route.departureTime}</p>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Destination */}
+                            <div className="flex items-start gap-2">
+                              <MapPin className="w-4 h-4 text-blue-600 mt-0.5" />
+                              <div className="flex-1">
+                                <p className="text-xs font-medium text-blue-800 uppercase">Destination</p>
+                                <p className="text-sm font-semibold text-gray-900">{route.to}</p>
+                                {mode === 'bus' && route.arrivalTime && (
+                                  <p className="text-xs text-gray-600">Arrival: {route.arrivalTime}</p>
+                                )}
+                              </div>
+                            </div>
+
+                            {/* Duration */}
+                            <div className="flex items-center gap-2 text-sm bg-gray-50 p-2 rounded">
+                              <Clock className="w-4 h-4 text-gray-500" />
+                              <span className="text-gray-700">Duration: {route.duration}</span>
+                            </div>
+
+                            {/* Operator/Vehicle */}
+                            <div className="flex items-center gap-2 text-sm bg-indigo-50 p-2 rounded">
+                              <Info className="w-4 h-4 text-indigo-600" />
+                              <span className="text-gray-700">
+                                {mode === 'bus' ? `Operator: ${route.operator}` : `Vehicle: ${route.vehicle}`}
+                              </span>
+                            </div>
+                          </div>
+
+                          {/* Additional Info */}
+                          <div className="space-y-2">
+                            {mode === 'bus' && route.busType && (
+                              <div className="flex items-center gap-2 text-sm bg-blue-50 p-2 rounded border border-blue-200">
+                                <Badge variant="outline" className="border-blue-400 text-blue-700">
+                                  {route.busType}
+                                </Badge>
+                                <span className="text-gray-700">Bus Type</span>
+                              </div>
+                            )}
+                            
+                            {mode === 'car' && (
+                              <div className="grid grid-cols-2 gap-2">
+                                {route.fuelCost && (
+                                  <div className="flex items-center gap-2 text-sm bg-yellow-50 p-2 rounded">
+                                    <span className="text-gray-700">Fuel: ₹{route.fuelCost}</span>
+                                  </div>
+                                )}
+                                {route.tollCost && (
+                                  <div className="flex items-center gap-2 text-sm bg-orange-50 p-2 rounded">
+                                    <span className="text-gray-700">Tolls: ₹{route.tollCost}</span>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
 
                           <Button className="w-full mt-3 bg-indigo-600 hover:bg-indigo-700 text-white">
                             View Details

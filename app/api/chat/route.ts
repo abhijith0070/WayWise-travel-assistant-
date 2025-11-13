@@ -1,49 +1,41 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
-import { NextRequest, NextResponse } from "next/server";
-
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+import { NextRequest } from "next/server";
 
 export async function POST(req: NextRequest) {
   try {
     const { message } = await req.json();
 
-    if (!message || typeof message !== 'string') {
-      return NextResponse.json(
-        { error: "Invalid message format" },
-        { status: 400 }
-      );
+    if (!process.env.NEXT_PUBLIC_GROQ_API_KEY) {
+      return new Response(JSON.stringify({ error: "Missing API key" }), { status: 500 });
     }
 
-    const systemPrompt = `
-      You are Sundaran AI — an intelligent travel assistant for WayWise, built to answer travel questions,
-      suggest destinations, and provide information about travel planning.
-      
-      WayWise offers:
-      - AI-powered trip planning with personalized itineraries
-      - Route search (bus, train, flight options)
-      - Hotel booking assistance
-      - Attraction recommendations
-      - Fuel station locations
-      - Ticket booking services
-      
-      Be concise, warm, friendly, and informative. Keep responses under 100 words.
-      Use emojis occasionally to make it friendly. If asked about specific routes or bookings,
-      guide them to use the Manual Search or AI Trip Planner features on the homepage.
-      
-      Always introduce yourself as "Sundaran AI" when greeting users.
-    `;
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${process.env.NEXT_PUBLIC_GROQ_API_KEY}`,
+      },
+      body: JSON.stringify({
+        model: "llama-3.3-70b-versatile",
+        messages: [
+          { role: "system", content: "You are Sundaran AI, a friendly travel planning assistant for WayWise. Help users with trip planning, route search, bookings, and travel recommendations. Be concise, warm, and informative. Keep responses under 100 words." },
+          { role: "user", content: message },
+        ],
+        temperature: 0.7,
+      }),
+    });
 
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
-    const result = await model.generateContent(`${systemPrompt}\n\nUser: ${message}`);
+    if (!response.ok) {
+      const err = await response.text();
+      console.error("Groq API error:", err);
+      return new Response(JSON.stringify({ error: "Groq API request failed" }), { status: 500 });
+    }
 
-    const reply = result.response.text();
-    
-    return NextResponse.json({ reply });
+    const data = await response.json();
+    const reply = data?.choices?.[0]?.message?.content || "No response received.";
+
+    return new Response(JSON.stringify({ reply }), { status: 200 });
   } catch (error) {
-    console.error("Gemini API error:", error);
-    return NextResponse.json(
-      { error: "Failed to get AI response. Please try again." },
-      { status: 500 }
-    );
+    console.error("Chat route error:", error);
+    return new Response(JSON.stringify({ error: "Internal Server Error" }), { status: 500 });
   }
 }
