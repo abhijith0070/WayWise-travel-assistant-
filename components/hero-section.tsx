@@ -34,12 +34,15 @@ export function HeroSection() {
       return
     }
 
-    // Build AI prompt from manual inputs
-    const prompt = `Plan a trip from ${manualSearch.from} to ${manualSearch.to}${
-      manualSearch.date ? ` on ${manualSearch.date}` : ""
-    }${manualSearch.mode ? ` by ${manualSearch.mode}` : ""}.`
-
-    handleAiSearch(prompt)
+    // Redirect to manual route search page with query parameters
+    const params = new URLSearchParams({
+      from: manualSearch.from,
+      to: manualSearch.to,
+      ...(manualSearch.mode && { mode: manualSearch.mode }),
+      ...(manualSearch.date && { date: manualSearch.date }),
+    })
+    
+    router.push(`/search-routes?${params.toString()}`)
   }
 
   const handleAiSearch = async (customPrompt?: string) => {
@@ -57,11 +60,9 @@ export function HeroSection() {
     setIsLoading(true)
 
     try {
-      // Store prompt in session storage for trip planner page
-      sessionStorage.setItem("tripPrompt", prompt)
-      
-      // Navigate to trip planner page
-      router.push("/plan-trip?generate=true")
+      // Navigate directly to results page with prompt
+      const encodedPrompt = encodeURIComponent(prompt)
+      router.push(`/trip-results?prompt=${encodedPrompt}`)
       
       toast({
         title: "Generating Trip Plan",
@@ -71,7 +72,7 @@ export function HeroSection() {
       console.error("Navigation error:", error)
       toast({
         title: "Error",
-        description: "Failed to navigate to trip planner. Please try again.",
+        description: "Failed to navigate to results page. Please try again.",
         variant: "destructive",
       })
     } finally {

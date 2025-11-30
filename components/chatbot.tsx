@@ -17,9 +17,9 @@ interface Message {
 
 const predefinedResponses = {
   greeting: [
-    "Hello! I'm your Way-Wise travel assistant. How can I help you plan your perfect trip today?",
-    "Hi there! Ready to explore the world? I'm here to help with all your travel planning needs!",
-    "Welcome to Way-Wise! I can help you with route planning, bookings, and travel recommendations. What's your destination?",
+    "Hello! I'm Sundaran AI, your intelligent travel assistant. How can I help you plan your perfect trip today?",
+    "Hi there! Ready to explore the world? I'm Sundaran AI, here to help with all your travel planning needs!",
+    "Welcome! I'm Sundaran AI, and I can help you with route planning, bookings, and travel recommendations. What's your destination?",
   ],
   planning: [
     "I'd be happy to help you plan your trip! Could you tell me your departure city, destination, and preferred travel dates?",
@@ -44,7 +44,7 @@ export function Chatbot() {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
-      text: "Hello! I'm your Way-Wise travel assistant. How can I help you plan your perfect trip today?",
+      text: "Hello! I'm Sundaran AI, your intelligent travel assistant. How can I help you plan your perfect trip today?",
       sender: "bot",
       timestamp: new Date(),
     },
@@ -103,24 +103,52 @@ export function Chatbot() {
     }
 
     setMessages((prev) => [...prev, userMessage])
+    const currentInput = inputValue
     setInputValue("")
     setIsTyping(true)
 
-    // Simulate bot typing delay
-    setTimeout(
-      () => {
+    try {
+      const res = await fetch("/api/groq", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ 
+          message: currentInput,
+          role: "chat"
+        }),
+      });
+
+      if (!res.ok) {
+        console.error("Chat API failed:", await res.text());
         const botResponse: Message = {
           id: (Date.now() + 1).toString(),
-          text: generateBotResponse(inputValue),
+          text: "❌ Failed to get AI response. Please try again.",
           sender: "bot",
           timestamp: new Date(),
         }
-
         setMessages((prev) => [...prev, botResponse])
-        setIsTyping(false)
-      },
-      1000 + Math.random() * 1000,
-    ) // Random delay between 1-2 seconds
+        return;
+      }
+
+      const data = await res.json();
+      const botResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        text: data.reply || "No response received.",
+        sender: "bot",
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, botResponse])
+    } catch (err) {
+      console.error("Chat error:", err);
+      const botResponse: Message = {
+        id: (Date.now() + 1).toString(),
+        text: "⚠️ Connection error. Please check your internet connection.",
+        sender: "bot",
+        timestamp: new Date(),
+      }
+      setMessages((prev) => [...prev, botResponse])
+    } finally {
+      setIsTyping(false)
+    }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -146,17 +174,17 @@ export function Chatbot() {
   return (
     <div className="fixed bottom-6 right-6 z-50">
       <Card
-        className={`w-80 shadow-2xl border-0 transition-all duration-300 ${isMinimized ? "h-16" : "h-96"} bg-white`}
+        className={`w-[420px] shadow-2xl border-0 transition-all duration-300 ${isMinimized ? "h-16" : "h-[600px]"} bg-white rounded-2xl`}
       >
-        <CardHeader className="pb-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-t-lg">
+        <CardHeader className="pb-2 bg-gradient-to-r from-orange-500 to-orange-600 text-white rounded-t-2xl">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-2">
-              <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-                <Bot className="w-5 h-5" />
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                <Bot className="w-6 h-6" />
               </div>
               <div>
-                <CardTitle className="text-sm font-semibold">Way-Wise Assistant</CardTitle>
-                <p className="text-xs text-orange-100">Online • Ready to help</p>
+                <CardTitle className="text-base font-semibold">Sundaran AI</CardTitle>
+                <p className="text-xs text-orange-100">Powered by Groq • Ready to help</p>
               </div>
             </div>
             <div className="flex items-center space-x-1">

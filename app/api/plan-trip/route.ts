@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import OpenAI from 'openai';
 
-// Initialize OpenAI client
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY || '',
-});
+const OLLAMA_API_URL = "http://localhost:11434/api/generate";
+
+// Increase timeout for serverless functions
+export const maxDuration = 60;
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,126 +12,83 @@ export async function POST(request: NextRequest) {
     // Validate input
     if (!prompt || typeof prompt !== 'string') {
       return NextResponse.json(
-        { error: 'Invalid prompt. Please provide a valid travel query.' },
+        { success: false, error: 'Missing prompt' },
         { status: 400 }
       );
     }
 
-    if (!process.env.OPENAI_API_KEY) {
-      return NextResponse.json(
-        { error: 'OpenAI API key not configured' },
-        { status: 500 }
-      );
-    }
+    // Optimized prompt for faster responses
+    const enhancedPrompt = `You are a travel planner AI. Create a concise trip itinerary:
 
-    // Create structured prompt for AI
-    const systemPrompt = `You are WayWise AI, an expert travel planner. Generate detailed, personalized travel itineraries based on user requests.
+${prompt}
 
-Your response MUST be a valid JSON object with this exact structure:
-{
-  "destination": "Primary destination city/region",
-  "from": "Starting location",
-  "duration": "Number of days",
-  "budget": "Estimated budget range in INR",
-  "bestTimeToVisit": "Recommended months/season",
-  "overview": "Brief 2-3 sentence trip overview",
-  "itinerary": [
-    {
-      "day": 1,
-      "title": "Day title",
-      "activities": [
-        {
-          "time": "Morning/Afternoon/Evening",
-          "activity": "Activity name",
-          "description": "Detailed description",
-          "cost": "Estimated cost"
+Include:
+1. Day-by-day plan with key activities
+2. Budget estimate (₹)
+3. Top 3 attractions
+4. Travel tips
+
+Be brief and structured. Max 500 words.`;
+
+    console.log('🚀 Starting trip generation with gemma3:1b model...');
+
+    // Call Ollama API with non-streaming mode for stability
+    const ollamaResponse = await fetch(OLLAMA_API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "gemma3:1b",
+        prompt: enhancedPrompt,
+        stream: false,
+        keep_alive: "10m",
+        options: {
+          num_predict: 700,
+          temperature: 0.6
         }
-      ],
-      "meals": {
-        "breakfast": "Recommendation with cost",
-        "lunch": "Recommendation with cost",
-        "dinner": "Recommendation with cost"
-      },
-      "accommodation": "Hotel/Stay suggestion with cost"
-    }
-  ],
-  "transportation": {
-    "toDestination": "How to reach with options and costs",
-    "local": "Local transport recommendations"
-  },
-  "budgetBreakdown": {
-    "transport": "Cost estimate",
-    "accommodation": "Cost estimate",
-    "food": "Cost estimate",
-    "activities": "Cost estimate",
-    "miscellaneous": "Cost estimate",
-    "total": "Total estimated cost"
-  },
-  "packingList": ["item1", "item2", ...],
-  "localTips": ["tip1", "tip2", ...],
-  "mustTryFoods": ["food1", "food2", ...],
-  "mustVisitPlaces": ["place1", "place2", ...]
-}
-
-Be specific with Indian currency (₹), provide realistic costs, and include cultural insights.`;
-
-    // Call OpenAI API
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-4-turbo-preview',
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: prompt }
-      ],
-      temperature: 0.7,
-      max_tokens: 3000,
-      response_format: { type: 'json_object' }
+      }),
     });
 
-    const aiResponse = completion.choices[0]?.message?.content;
-
-    if (!aiResponse) {
-      throw new Error('No response from AI');
+    if (!ollamaResponse.ok) {
+      throw new Error(`Ollama API failed with ${ollamaResponse.status}`);
     }
 
-    // Parse and validate JSON response
-    const tripPlan = JSON.parse(aiResponse);
+    const data = await ollamaResponse.json();
+    
+    // Extract the response text from Ollama
+    const tripPlan = data.response;
+    
+    if (!tripPlan) {
+      throw new Error('No response from Ollama model');
+    }
 
-    // Return formatted response
+    console.log('✅ Trip plan generated successfully. Length:', tripPlan.length);
+
+    // Return complete trip plan as JSON
     return NextResponse.json({
       success: true,
       data: tripPlan,
-      timestamp: new Date().toISOString(),
+      plan: tripPlan
     });
 
   } catch (error: any) {
-    console.error('AI Trip Planning Error:', error);
-
-    // Handle specific errors
-    if (error.code === 'insufficient_quota') {
+    console.error('Trip Plan API error:', error);
+    
+    if (error.code === 'ECONNREFUSED' || error.message.includes('fetch failed')) {
       return NextResponse.json(
-        { error: 'API quota exceeded. Please try again later.' },
-        { status: 429 }
+        { 
+          success: false,
+          error: 'Cannot connect to Ollama. Make sure Ollama is running: "ollama serve"'
+        },
+        { status: 503 }
       );
     }
-
+    
     return NextResponse.json(
       { 
-        error: 'Failed to generate trip plan. Please try again.',
-        details: error.message 
+        success: false, 
+        error: error.message || 'Ollama API failed. Check if Ollama is running.'
       },
       { status: 500 }
     );
   }
-}
-
-// Enable CORS for frontend
-export async function OPTIONS(request: NextRequest) {
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
 }

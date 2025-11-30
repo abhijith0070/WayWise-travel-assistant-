@@ -2,13 +2,15 @@
 
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Menu, X } from "lucide-react"
+import { Menu, X, User, LogOut } from "lucide-react"
 import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
+import { useAuth } from "@/contexts/AuthContext"
 
 export function Navbar() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const pathname = usePathname()
+  const { user, signOut, loading } = useAuth()
   
   // Determine if we're on a page with dark background (like home with video)
   const isDarkBackground = pathname === "/" || pathname === "/plan-trip"
@@ -44,12 +46,63 @@ export function Navbar() {
             <Link href="/contact" className={`${textColorClass} ${hoverColorClass} transition-colors font-medium`}>
               Contact
             </Link>
-            <Button
-              asChild
-              className="bg-orange-500 hover:bg-orange-600 text-white font-medium px-6 py-2 rounded-lg transition-all duration-300 hover:scale-105"
-            >
-              <Link href="/plan-trip">Plan My Trip</Link>
-            </Button>
+            
+            {/* Auth Buttons - Show different buttons based on auth state */}
+            {!loading && (
+              <>
+                {user ? (
+                  // Logged in - Show user email and logout
+                  <div className="flex items-center space-x-3">
+                    <Link href="/dashboard">
+                      <Button
+                        variant="outline"
+                        className={`${isDarkBackground ? 'border-white text-white hover:bg-white/10' : 'border-gray-800 text-gray-800 hover:bg-gray-100'} font-medium px-4 py-2 rounded-lg transition-all`}
+                      >
+                        <User className="w-4 h-4 mr-2" />
+                        {user.email?.split('@')[0]}
+                      </Button>
+                    </Link>
+                    <Button
+                      onClick={signOut}
+                      variant="outline"
+                      className={`${isDarkBackground ? 'border-red-400 text-red-400 hover:bg-red-400/10' : 'border-red-600 text-red-600 hover:bg-red-50'} font-medium px-4 py-2 rounded-lg transition-all`}
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </Button>
+                    <Button
+                      asChild
+                      className="bg-orange-500 hover:bg-orange-600 text-white font-medium px-6 py-2 rounded-lg transition-all duration-300 hover:scale-105"
+                    >
+                      <Link href="/plan-trip">Plan My Trip</Link>
+                    </Button>
+                  </div>
+                ) : (
+                  // Not logged in - Show Sign Up and Sign In
+                  <div className="flex items-center space-x-3">
+                    <Button
+                      asChild
+                      variant="outline"
+                      className={`${isDarkBackground ? 'border-white text-white hover:bg-white/10' : 'border-indigo-600 text-indigo-600 hover:bg-indigo-50'} font-medium px-5 py-2 rounded-lg transition-all`}
+                    >
+                      <Link href="/login">Sign In</Link>
+                    </Button>
+                    <Button
+                      asChild
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-medium px-5 py-2 rounded-lg transition-all duration-300 hover:scale-105"
+                    >
+                      <Link href="/signup">Sign Up</Link>
+                    </Button>
+                    <Button
+                      asChild
+                      className="bg-orange-500 hover:bg-orange-600 text-white font-medium px-6 py-2 rounded-lg transition-all duration-300 hover:scale-105"
+                    >
+                      <Link href="/plan-trip">Plan My Trip</Link>
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -110,13 +163,70 @@ export function Navbar() {
             >
               Contact
             </Link>
-            <Button
-              asChild
-              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium mt-4"
-              onClick={() => setIsMenuOpen(false)}
-            >
-              <Link href="/plan-trip">Plan My Trip</Link>
-            </Button>
+            
+            {/* Mobile Auth Buttons */}
+            {!loading && (
+              <>
+                {user ? (
+                  // Logged in - Show dashboard and logout
+                  <div className="space-y-2 pt-2 border-t border-white/20">
+                    <Link href="/dashboard" onClick={() => setIsMenuOpen(false)}>
+                      <Button
+                        variant="outline"
+                        className="w-full border-white text-white hover:bg-white/10 font-medium"
+                      >
+                        <User className="w-4 h-4 mr-2" />
+                        {user.email?.split('@')[0]}
+                      </Button>
+                    </Link>
+                    <Button
+                      onClick={() => {
+                        signOut();
+                        setIsMenuOpen(false);
+                      }}
+                      variant="outline"
+                      className="w-full border-red-400 text-red-400 hover:bg-red-400/10 font-medium"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </Button>
+                    <Button
+                      asChild
+                      className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Link href="/plan-trip">Plan My Trip</Link>
+                    </Button>
+                  </div>
+                ) : (
+                  // Not logged in - Show Sign Up and Sign In
+                  <div className="space-y-2 pt-2 border-t border-white/20">
+                    <Button
+                      asChild
+                      variant="outline"
+                      className="w-full border-white text-white hover:bg-white/10 font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Link href="/login">Sign In</Link>
+                    </Button>
+                    <Button
+                      asChild
+                      className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Link href="/signup">Sign Up</Link>
+                    </Button>
+                    <Button
+                      asChild
+                      className="w-full bg-orange-500 hover:bg-orange-600 text-white font-medium"
+                      onClick={() => setIsMenuOpen(false)}
+                    >
+                      <Link href="/plan-trip">Plan My Trip</Link>
+                    </Button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         )}
       </div>
